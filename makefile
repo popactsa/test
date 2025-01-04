@@ -22,7 +22,7 @@ INC_FLAGS = $(addprefix -I,$(H_DIR))
 
 CFLAGS = $(INC_FLAGS) -O0 -Wall -std=c++20
 
-all: $(O_DIR) $(D_DIR) $(TARGET) 
+all: $(H_DIR) $(O_DIR) $(D_DIR) $(TARGET) 
 
 $(TARGET): $(OBJS)
 	$(CPP) $(OBJS) -o $@
@@ -30,38 +30,26 @@ $(TARGET): $(OBJS)
 $(O_DIR)/%.o: $(S_DIR)/%.cpp
 	$(CPP) $(CFLAGS) -c $< -o $@
 
+$(H_DIR):
+	if [ ! -d "$(H_DIR)" ]; then \
+		mkdir $(H_DIR); \
+		echo "$(H_DIR) created"; \
+	fi
+
 $(O_DIR):
-	if [ -d "$(O_DIR)" ]; then \
-		echo "$(O_DIR) exists"; \
-	else \
+	if [ ! -d "$(O_DIR)" ]; then \
 		mkdir $(O_DIR); \
 		echo "$(O_DIR) created"; \
 	fi
 
 $(D_DIR):
-	if [ -d "$(D_DIR)" ]; then \
-		echo "$(D_DIR) exists";\
-	else \
-		mkdir $(D_DIR); \
-		echo "$(D_DIR) created"; \
-	fi
-
-install:
-	if [ -d "$(O_DIR)" ]; then \
-		echo "$(O_DIR) exists"; \
-	else \
-		mkdir $(O_DIR); \
-		echo "$(O_DIR) created"; \
-	fi
-	if [ -d "$(D_DIR)" ]; then \
-		echo "$(D_DIR) exists";\
-	else \
+	if [ ! -d "$(D_DIR)" ]; then \
 		mkdir $(D_DIR); \
 		echo "$(D_DIR) created"; \
 	fi
 
 clean:
-	rm -rf $(O_DIR)/* $(TARGET) $(D_DIR)/*
+	rm -rf $(O_DIR)/* $(TARGET)
 
 print:
 	echo $(SRCS)
