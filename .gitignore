@@ -1,0 +1,23 @@
+// xixi xaxa
+
+*.o
+
+*.exe
+
+*.png
+
+main
+
+data
+
+object_files/*
+
+source/~/*
+
+headers/~/*
+
+~/.vim/*
+
+*.png
+
+readme.md
