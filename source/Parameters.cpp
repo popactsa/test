@@ -28,9 +28,9 @@ Parameters::Parameters(std::ifstream fin)
 				void* var{var_table[var_read_properties[0]].second};
 				std::string value = var_read_properties[1];
 				if (type.compare("double") == 0)
-					*(double*)var = std::stod(value);
+					*(static_cast<double*>(var)) = std::stod(value);
 				else if (type.compare("int") == 0)
-					*(int*)var = std::stoi(value);
+					*(static_cast<int*>(var)) = std::stoi(value);
 				else
 					std::terminate();
 			}
