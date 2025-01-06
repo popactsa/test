@@ -18,6 +18,8 @@ constexpr Error_action default_Error_action = Error_action::throwing;
 
 enum class Error_code
 {
+	not_specified,
+	variable_not_found,
 	negative_value,
 	non_positive_value,
 	incorrect_order,
@@ -27,7 +29,10 @@ enum class Error_code
 
 std::string Error_code_name[]
 {
+	"not specified"
+	"variable not found",
 	"negative value",
+	"non positive value",
 	"incorrect order",
 	"same value",
 	"TBD"
@@ -40,7 +45,7 @@ struct Error
 
 	Error(Error_code _ec, const char* _msg): ec{_ec}, msg{_msg} {}
 	Error(Error_code _ec): Error(_ec, "<blank>") {}
-	Error(): Error(Error_code::terminating, "<blank>") {}
+	Error(): Error(Error_code::not_specified, "<blank>") {}
 	
 	const char* what() const
 	{
