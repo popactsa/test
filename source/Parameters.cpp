@@ -1,12 +1,26 @@
 #include "Parameters.h"
+#include <iterator>
+#include <typeinfo>
+#include <stacktrace>
 
 template<const int size>
 void split_string(const std::string& init, std::array<std::string, size>& result, const char sep)
 {
 	std::stringstream ss(init);
-	for (auto it = result.begin(); std::getline(ss, *it++, sep);)
+	auto it = result.begin();
+	while (std::getline(ss, *it++, sep))
 	{
+		/*std::cout << (std::distance(it, const_cast<std::array<std::string, size>::iterator>(result.end())) >= 0) << std::endl;*/
+		/*expect<Error_action::throwing>(*/
+		/*	[=](){return std::distance(it, const_cast<std::array<std::string, size>::iterator>(result.end())) >= 0; },*/
+		/*	Error(Error_code::range_error, std::string(std::string("size of init string is too big, must be = ") + std::to_string(size)).c_str())*/
+		/*);*/
 	}
+	/*std::cout << (std::distance(it, const_cast<std::array<std::string, size>::iterator>(result.end())) != -1) << std::endl;*/
+	/*expect<Error_action::throwing>(*/
+	/*	[=](){return std::distance(it, const_cast<std::array<std::string, size>::iterator>(result.end())) == -1; },*/
+	/*	Error(Error_code::range_error, std::string(std::string("size of init string is too low, must be = ") + std::to_string(size)).c_str())*/
+	/*);*/
 }
 
 Parameters::Parameters(std::ifstream fin)
@@ -23,10 +37,9 @@ Parameters::Parameters(std::ifstream fin)
 		for (std::string read; std::getline(fin, read); )
 		{
 			std::array<std::string, number_of_properties> var_read_properties{}; // name value
-			split_string<number_of_properties>(read, var_read_properties);
-
 			try
 			{
+				split_string<number_of_properties>(read, var_read_properties);
 				expect<Error_action::throwing>(
 					[=](){return var_table.find(var_read_properties[0]) != var_table.end(); }, 
 					Error(Error_code::variable_not_found, std::string(std::string("Variable \"") + var_read_properties[0] + std::string("\" not found")).c_str())
@@ -50,7 +63,9 @@ Parameters::Parameters(std::ifstream fin)
 						std::cerr << "action : Read line ignored" << std::endl << std::endl;
 						break;
 					default:
+						std::cerr << "action : Terminating.." << std::endl << std::endl;
 						std::terminate();
+						break;
 				}
 			}
 		}

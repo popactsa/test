@@ -27,6 +27,6 @@ struct Parameters
 };
 
 template<const int size>
-inline void split_string(const std::string& init, std::array<std::string, size>& result, const char = ' ');
+void split_string(const std::string& init, std::array<std::string, size>& result, const char = ' ');
 
 #endif

@@ -20,10 +20,7 @@ enum class Error_code
 {
 	not_specified,
 	variable_not_found,
-	negative_value,
-	non_positive_value,
-	incorrect_order,
-	same_value,
+	range_error,
 	TBD
 };
 
@@ -31,10 +28,7 @@ std::string Error_code_name[]
 {
 	"not specified"
 	"variable not found",
-	"negative value",
-	"non positive value",
-	"incorrect order",
-	"same value",
+	"range error",
 	"TBD"
 };
 
