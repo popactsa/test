@@ -40,9 +40,9 @@ Parameters::Parameters(std::ifstream fin)
 			try
 			{
 				split_string<number_of_properties>(read, var_read_properties);
-				expect<Error_action::throwing>(
+				expect<Error_action::throwing, std::invalid_argument>(
 					[=](){return var_table.find(var_read_properties[0]) != var_table.end(); }, 
-					Error(Error_code::variable_not_found, std::string(std::string("Variable \"") + var_read_properties[0] + std::string("\" not found")).c_str())
+					"Incorrect value read"
 				);
 				std::string type{var_table[var_read_properties[0]].first};
 
@@ -54,19 +54,9 @@ Parameters::Parameters(std::ifstream fin)
 					*(static_cast<int*>(var)) = std::stoi(value);
 				std::cout << var_read_properties[0] << " : " << value << std::endl;
 			}
-			catch(const Error& err)
+			catch(std::invalid_argument const &err)
 			{
 				std::cerr << std::endl << "failure : " << err.what() << std::endl;
-				switch (err.ec)
-				{
-					case Error_code::variable_not_found:
-						std::cerr << "action : Read line ignored" << std::endl << std::endl;
-						break;
-					default:
-						std::cerr << "action : Terminating.." << std::endl << std::endl;
-						std::terminate();
-						break;
-				}
 			}
 		}
 	}

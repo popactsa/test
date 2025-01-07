@@ -3,6 +3,8 @@
 
 #include <exception>
 #include <string>
+#include <type_traits>
+#include <cassert>
 
 ////////Tour of C++ 2022 B.Stroustrup p.49/////////
 
@@ -16,50 +18,16 @@ enum class Error_action
 
 constexpr Error_action default_Error_action = Error_action::throwing;
 
-enum class Error_code
+template<Error_action action, class exc, class C>
+constexpr void expect(const C cond, const char *msg)
 {
-	not_specified,
-	variable_not_found,
-	range_error,
-	TBD
-};
-
-std::string Error_code_name[]
-{
-	"not specified"
-	"variable not found",
-	"range error",
-	"TBD"
-};
-
-struct Error
-{
-	Error_code ec;
-	std::string msg;
-
-	Error(Error_code _ec, const char* _msg): ec{_ec}, msg{_msg} {}
-	Error(Error_code _ec): Error(_ec, "<blank>") {}
-	Error(): Error(Error_code::not_specified, "<blank>") {}
-	
-	const char* what() const
-	{
-		return msg.c_str();
-	}
-	inline const char* name()
-	{
-		return Error_code_name[int(ec)].c_str();
-	}
-};
-
-template<Error_action action = default_Error_action, class C>
-constexpr void expect(C cond, Error x)
-{
+	static_assert((void("failure : Provided exception isn't derived from std::exception"), std::is_base_of<std::exception, exc>::value == true));
 	if constexpr (action == Error_action::throwing)
-		if (!cond()) throw x;
+		if (!cond()) throw exc(msg);
 	if constexpr (action == Error_action::terminating)
 		if (!cond()) std::terminate();
 	if constexpr (action == Error_action::logging)
-		if (!cond()) std::cerr << "expect() failure: " << x.name() << ' ' << x.what() << std::endl;
+		if (!cond()) std::cerr << "expect() failure: " << ' ' << exc(msg).what() << std::endl;
 	// ignore --> nothing happens
 }
 
