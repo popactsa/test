@@ -8,19 +8,22 @@ void split_string(const std::string& init, std::array<std::string, size>& result
 {
 	std::stringstream ss(init);
 	auto it = result.begin();
+	long dist;
 	while (std::getline(ss, *it++, sep))
 	{
-		/*std::cout << (std::distance(it, const_cast<std::array<std::string, size>::iterator>(result.end())) >= 0) << std::endl;*/
-		/*expect<Error_action::throwing>(*/
-		/*	[=](){return std::distance(it, const_cast<std::array<std::string, size>::iterator>(result.end())) >= 0; },*/
-		/*	Error(Error_code::range_error, std::string(std::string("size of init string is too big, must be = ") + std::to_string(size)).c_str())*/
-		/*);*/
+		dist = std::distance(it, const_cast<std::array<std::string, size>::iterator>(result.end()));
+		// Strange behaviout : have to use dist variable, if not, then std::distance returns in expect() *true value* - 24;
+		expect<Error_action::terminating, std::length_error>(
+			/*[=](){return (std::distance(it, const_cast<std::array<std::string, size>::iterator>(result.end())) <= 0); }, */
+			[=](){return dist >= 0; }, 
+			(std::string("Size of init string is too big, must be = ") + std::to_string(size)).c_str()
+		);
 	}
-	/*std::cout << (std::distance(it, const_cast<std::array<std::string, size>::iterator>(result.end())) != -1) << std::endl;*/
-	/*expect<Error_action::throwing>(*/
-	/*	[=](){return std::distance(it, const_cast<std::array<std::string, size>::iterator>(result.end())) == -1; },*/
-	/*	Error(Error_code::range_error, std::string(std::string("size of init string is too low, must be = ") + std::to_string(size)).c_str())*/
-	/*);*/
+	dist = std::distance(it, const_cast<std::array<std::string, size>::iterator>(result.end()));
+	expect<Error_action::terminating, std::length_error>(
+		[=](){return dist == -1; }, 
+		(std::string("Size of init string is too small, must be = ") + std::to_string(size)).c_str()
+	);
 }
 
 Parameters::Parameters(std::ifstream fin)
@@ -54,9 +57,13 @@ Parameters::Parameters(std::ifstream fin)
 					*(static_cast<int*>(var)) = std::stoi(value);
 				std::cout << var_read_properties[0] << " : " << value << std::endl;
 			}
-			catch(std::invalid_argument const &err)
+			catch (const std::invalid_argument &err)
 			{
-				std::cerr << std::endl << "failure : " << err.what() << std::endl;
+				std::cerr << std::endl << "failure : " << err.what() << std::endl << std::endl;
+			}
+			catch (const std::length_error &err)
+			{
+				std::cerr << std::endl << "failure : " << err.what() << std::endl << std::endl;
 			}
 		}
 	}
