@@ -15,10 +15,19 @@
 
 #include "error_handling.h"
 
+enum class enum_test
+{
+	red,
+	blue,
+	green
+};
+
 struct Parameters
 {
 	double dummy_parameter;
 	int steps;
+	std::string sentence;
+	enum_test enum_parameter;
 
 	Parameters(){};
 	Parameters(Parameters&&) = default;

@@ -23,9 +23,17 @@ constexpr void expect(const C cond, const char *msg)
 {
 	static_assert((void("failure : Provided exception isn't derived from std::exception"), std::is_base_of<std::exception, exc>::value == true));
 	if constexpr (action == Error_action::throwing)
-		if (!cond()) throw exc(msg);
+		if (!cond())
+		{
+			std::cerr << "failure :" << msg << std::endl;
+			throw exc(msg);
+		}
 	if constexpr (action == Error_action::terminating)
-		if (!cond()) std::terminate();
+		if (!cond())
+		{
+			std::cerr << msg << std::endl;
+			std::terminate();
+		}
 	if constexpr (action == Error_action::logging)
 		if (!cond()) std::cerr << "expect() failure: " << ' ' << exc(msg).what() << std::endl;
 	// ignore --> nothing happens
