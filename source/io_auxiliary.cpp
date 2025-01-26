@@ -41,11 +41,12 @@ int print_filenames(const std::filesystem::path &dir)
 		auto file_perms = std::filesystem::status(dir_entry).permissions();
 		if ((file_perms & owner_read) == owner_read)
 		{
+			++cnt;
 			const std::string rp_str{static_cast<std::string>(std::filesystem::relative(dir_entry.path(), dir))};
 			const std::string time_str{time_to_string(dir_entry.last_write_time())};
 			const int number_of_chars_on_the_left{4 + std::floor(1 + std::log10(cnt)) + 3 + static_cast<int>(rp_str.size())}; // 4 spaces
 			std::string fmt("    {} : {}{:.>" + std::to_string(w.ws_col - number_of_chars_on_the_left) + "}");
-			std::cout << dynamic_print(fmt, ++cnt, rp_str, time_str) << std::endl;
+			std::cout << dynamic_print(fmt, cnt, rp_str, time_str) << std::endl;
 		}
 	}
 	return cnt;
