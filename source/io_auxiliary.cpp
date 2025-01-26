@@ -26,6 +26,22 @@ std::filesystem::path get_path_to_file_in_dir(const std::filesystem::path &dir, 
 	throw std::range_error("end of directory reached");
 }
 
+std::string get_format_by_left_side_impl(std::initializer_list<std::string_view> args) noexcept
+{
+	std::string fmt;
+	for (auto it : args) 
+	{
+		fmt += it;		
+	}
+	fmt += "{:.>" + std::to_string(w.ws_col - static_cast<int>(fmt.size())) + "}";
+	return fmt;
+}
+
+template<typename... type>
+std::string get_format_by_left_side(const type &... args) noexcept
+{
+	return get_format_by_left_side_impl({args...});
+}
 
 int print_filenames(const std::filesystem::path &dir) noexcept
 {
@@ -38,11 +54,9 @@ int print_filenames(const std::filesystem::path &dir) noexcept
 		{
 			++cnt;
 			const std::string rp_str{static_cast<std::string>(std::filesystem::relative(dir_entry.path(), dir))};
-			const int number_of_chars_on_the_left{4/*spaces*/ + std::floor(1 + std::log10(cnt)) + 3/*" : "*/ + static_cast<int>(rp_str.size())};
-
+			std::string fmt = get_format_by_left_side("    ", std::to_string(cnt), " : ", rp_str);
 			const std::string time_str{time_to_string(dir_entry.last_write_time())};
-			std::string fmt("    {} : {}{:.>" + std::to_string(w.ws_col - number_of_chars_on_the_left) + "}");
-			std::cout << dynamic_print(fmt, cnt, rp_str, time_str) << std::endl;
+			std::cout << dynamic_print(fmt, time_str) << std::endl;
 		}
 	}
 	return cnt;

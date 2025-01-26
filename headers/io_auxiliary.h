@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <cmath>
+#include <initializer_list>
 
 extern struct winsize w;
 
@@ -27,6 +28,11 @@ inline std::string dynamic_print(std::string_view fmt_str, Args&&... args)
 {
 	return std::vformat(fmt_str, std::make_format_args(args...));
 }
+
+std::string get_format_by_left_side_impl(std::initializer_list<std::string_view>) noexcept;
+
+template<typename... type>
+std::string get_format_by_left_side(const type &...) noexcept;
 
 inline bool check_rmod(const std::filesystem::path& p)
 {
