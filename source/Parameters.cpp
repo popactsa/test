@@ -11,12 +11,12 @@ void split_string(const std::string& init, std::array<std::string, size>& result
 	auto it = result.begin();
 	while (std::getline(ss, *it++, sep))
 	{
-		expect<Error_action::terminating, std::length_error>(
+		expect<Error_action::throwing, std::length_error>(
 			[&](){return (std::distance(it, const_cast<std::array<std::string, size>::iterator>(result.end())) >= 0); }, 
 			(std::string("Size of init string is too big, must be = ") + std::to_string(size)).c_str()
 		);
 	}
-	expect<Error_action::terminating, std::length_error>(
+	expect<Error_action::throwing, std::length_error>(
 		[&](){return (std::distance(it, const_cast<std::array<std::string, size>::iterator>(result.end())) == -1); }, 
 		(std::string("Size of init string is too small, must be = ") + std::to_string(size)).c_str()
 	);
@@ -71,11 +71,14 @@ Parameters::Parameters(std::ifstream fin)
 					*(static_cast<std::string*>(var)) = value;
 				else if (type.compare("enum_test") == 0)
 					*(static_cast<enum_test*>(var)) = str_to_enum_test(value);
-				std::cout << var_read_properties[0] << " : " << value << std::endl;
+				/*std::cout << var_read_properties[0] << " : " << value << std::endl;*/
 			}
-			catch (const std::exception &err)
+			/*catch (const std::length_error &err)*/
+			catch (std::exception &err)
 			{
-				std::cerr << std::endl << "failure : " << err.what() << std::endl << std::endl;
+				std::cerr << std::endl << "failure : " << err.what() << std::endl;
+				std::cerr << "Read : " << read << std::endl << std::endl;
+				std::terminate();
 			}
 		}
 		std::cout << "===================" << std::endl;
