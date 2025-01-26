@@ -20,7 +20,7 @@ OBJS = $(SRCS:%.cpp=$(O_DIR)/%.o)
 
 INC_FLAGS = $(addprefix -I,$(H_DIR))
 
-CFLAGS = $(INC_FLAGS) -O0 -Wall -std=c++20
+CFLAGS = $(INC_FLAGS) -O0 -Wall -std=c++20 -Wno-narrowing -Wno-return-type
 
 all: $(H_DIR) $(O_DIR) $(D_DIR) $(TARGET) 
 

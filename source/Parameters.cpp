@@ -2,6 +2,7 @@
 #include <iterator>
 #include <typeinfo>
 #include <stacktrace>
+#include "io_auxiliary.h"
 
 template<const int size>
 void split_string(const std::string& init, std::array<std::string, size>& result, const char sep)
@@ -39,13 +40,18 @@ Parameters::Parameters(std::ifstream fin)
 			if (read_value == "red") return enum_test::red;
 			else if (read_value == "blue") return enum_test::blue;
 			else if (read_value == "green") return enum_test::green;
-			else expect<Error_action::throwing, std::invalid_argument>(
-				[](){return false; },
-				"incorrect str_to_enum read value"
-			);
+			else
+			{
+				expect<Error_action::terminating, std::invalid_argument>(
+					[](){return false; },
+					"incorrect str_to_enum read value"
+				);
+				// ignore 'not reaching' warning
+			}
 		};
 		for (std::string read; std::getline(fin, read); )
 		{
+			if (read[0] == '#') continue;
 			std::array<std::string, number_of_properties> var_read_properties{}; // name value
 			try
 			{
