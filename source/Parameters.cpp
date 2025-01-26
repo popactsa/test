@@ -46,9 +46,9 @@ Parameters::Parameters(std::ifstream fin)
 					[](){return false; },
 					"incorrect str_to_enum read value"
 				);
-				// ignore 'not reaching' warning
 			}
 		};
+
 		for (std::string read; std::getline(fin, read); )
 		{
 			if (read[0] == '#') continue;

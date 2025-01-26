@@ -15,23 +15,17 @@ int main()
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 	namespace fs = std::filesystem;
 	const fs::path scenario_dir{"scenarios"};
-	try
+	if (check_rmod(scenario_dir))
 	{
-		check_rmod(scenario_dir);
-	}
-	catch(fs::filesystem_error const& err)
-	{
-		std::terminate();
-	}
-	fs::path scenario_file;
-	std::cout << "Choose scenario from " << scenario_dir << " : " << std::endl;
-	int cnt = print_filenames(scenario_dir);
-	int choose_scenario = choose_in_range(1, cnt);
-	scenario_file = get_path_to_file_in_dir(scenario_dir, choose_scenario);
+		fs::path scenario_file;
+		std::cout << "Choose scenario from " << scenario_dir << " : " << std::endl;
+		int n_items = print_filenames(scenario_dir);
+		int choose_item = choose_in_range(1, n_items);
+		scenario_file = get_path_to_file_in_dir(scenario_dir, choose_item);
 
-	const Parameters pars(std::ifstream{scenario_file});
-	std::cout << pars.dummy_parameter << std::endl;
-	Solver task(pars);
-	task.start();
+		const Parameters pars(std::ifstream{scenario_file});
+		Solver task(pars);
+		task.start();
+	}
 	return 0;
 }
