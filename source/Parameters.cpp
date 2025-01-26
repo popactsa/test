@@ -63,13 +63,13 @@ Parameters::Parameters(std::ifstream fin)
 				std::string type{var_table[var_read_properties[0]].first};
 				void* var{var_table[var_read_properties[0]].second};
 				std::string value = var_read_properties[1];
-				if (type.compare("double") == 0)
+				if (!type.compare("double"))
 					*(static_cast<double*>(var)) = std::stod(value);
-				else if (type.compare("int") == 0)
+				else if (!type.compare("int"))
 					*(static_cast<int*>(var)) = std::stoi(value);
-				else if (type.compare("string") == 0)
+				else if (!type.compare("string"))
 					*(static_cast<std::string*>(var)) = value;
-				else if (type.compare("enum_test") == 0)
+				else if (!type.compare("enum_test"))
 					*(static_cast<enum_test*>(var)) = str_to_enum_test(value);
 				/*std::cout << var_read_properties[0] << " : " << value << std::endl;*/
 			}
