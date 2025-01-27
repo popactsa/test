@@ -29,7 +29,7 @@ std::filesystem::path get_path_to_file_in_dir(const std::filesystem::path &dir, 
 std::string get_format_by_left_side_impl(std::initializer_list<std::string_view> args) noexcept
 {
 	std::string fmt;
-	for (auto it : args) 
+	for (auto const& it : args) 
 	{
 		fmt += it;		
 	}
@@ -48,8 +48,8 @@ int print_filenames(const std::filesystem::path &dir) noexcept
 	int cnt{0};
 	for (auto const& dir_entry : std::filesystem::directory_iterator{dir, std::filesystem::directory_options::skip_permission_denied})
 	{
-		using enum std::filesystem::perms;
 		auto file_perms = std::filesystem::status(dir_entry).permissions();
+		using enum std::filesystem::perms;
 		if ((file_perms & owner_read) == owner_read)
 		{
 			++cnt;

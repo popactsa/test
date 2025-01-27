@@ -11,7 +11,7 @@ void Solver::start()
 
 void Solver::calc_smth(std::vector<double>& p)
 {
-	for (auto it : p)
+	for (auto const& it : p)
 	{
 		std::cout << it << " ";
 	}
