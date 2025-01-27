@@ -17,9 +17,19 @@ extern struct winsize w;
 
 std::string time_to_string(const std::filesystem::file_time_type&) noexcept;
 
-std::filesystem::path get_path_to_file_in_dir(const std::filesystem::path&, int);
+std::filesystem::path get_path_to_file_in_dir(const std::filesystem::path&, int, std::string_view);
 
-int print_filenames(const std::filesystem::path&) noexcept;
+inline std::filesystem::path get_path_to_file_in_dir(const std::filesystem::path &dir, int pos)
+{
+	return get_path_to_file_in_dir(dir, pos, "");
+}
+
+int print_filenames(const std::filesystem::path&, std::string_view) noexcept;
+
+inline int print_filenames(const std::filesystem::path& dir) noexcept
+{
+	return print_filenames(dir, "");
+}
 
 int choose_in_range(const int, const int);
 

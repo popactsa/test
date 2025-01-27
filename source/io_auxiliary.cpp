@@ -10,14 +10,14 @@ std::string time_to_string(const std::filesystem::file_time_type& ftime) noexcep
 	return str;
 }
 
-std::filesystem::path get_path_to_file_in_dir(const std::filesystem::path &dir, int pos)
+std::filesystem::path get_path_to_file_in_dir(const std::filesystem::path &dir, int pos, std::string_view postfix)
 {
 	int cnt{0};
 	for (auto const& dir_entry : std::filesystem::directory_iterator{dir, std::filesystem::directory_options::skip_permission_denied})
 	{
 		using enum std::filesystem::perms;
 		auto file_perms = std::filesystem::status(dir_entry).permissions();
-		if ((file_perms & owner_read) == owner_read)
+		if ((file_perms & owner_read) == owner_read && dir_entry.path().string().ends_with(postfix))
 		{
 			if (cnt < pos) ++cnt;
 			if (cnt == pos) return dir_entry.path();
@@ -43,14 +43,14 @@ std::string get_format_by_left_side(const type &... args) noexcept
 	return get_format_by_left_side_impl({args...});
 }
 
-int print_filenames(const std::filesystem::path &dir) noexcept
+int print_filenames(const std::filesystem::path &dir, std::string_view postfix) noexcept
 {
 	int cnt{0};
 	for (auto const& dir_entry : std::filesystem::directory_iterator{dir, std::filesystem::directory_options::skip_permission_denied})
 	{
 		auto file_perms = std::filesystem::status(dir_entry).permissions();
 		using enum std::filesystem::perms;
-		if ((file_perms & owner_read) == owner_read)
+		if ((file_perms & owner_read) == owner_read && dir_entry.path().string().ends_with(postfix))
 		{
 			++cnt;
 			const std::string rp_str{static_cast<std::string>(std::filesystem::relative(dir_entry.path(), dir))};
