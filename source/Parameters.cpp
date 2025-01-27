@@ -22,33 +22,35 @@ void split_string(const std::string& init, std::array<std::string, size>& result
 	);
 }
 
+enum_test Parameters::interp_enum_test(std::string_view str) const
+{
+	if (str == "red") return enum_test::red;
+	else if (str == "blue") return enum_test::blue;
+	else if (str == "green") return enum_test::green;
+	else throw std::invalid_argument("Incorrect enum_test value passed");
+}
+
+void Parameters::assign_read_value(const std::string &value, std::string_view key)
+{
+	// std::stoi, stod requires for std::string, so passing value as std::string_view is meaningless i think
+	std::string_view type(var_table[key].first);
+	void* ptr{var_table[key].second};
+	if (!type.compare("double"))
+		*(static_cast<double*>(ptr)) = std::stod(value);
+	else if (!type.compare("int"))
+		*(static_cast<int*>(ptr)) = std::stoi(value);
+	else if (!type.compare("string"))
+		*(static_cast<std::string*>(ptr)) = value;
+	else if (!type.compare("enum_test"))
+		*(static_cast<enum_test*>(ptr)) = interp_enum_test(value);
+}
+
 Parameters::Parameters(std::ifstream fin)
 {
 	if (!fin.is_open()) std::cout << "failed to open" << std::endl;
 	else
 	{
-		std::unordered_map<std::string, std::pair<std::string, void*>> var_table
-		{
-			{"dummy_parameter", {"double", &dummy_parameter}},
-			{"steps", {"int", &steps}},
-			{"sentence", {"string", &sentence}},
-			{"enum_parameter", {"enum_test", &enum_parameter}}
-		};
 		const int number_of_properties = 2;
-		auto str_to_enum_test = [](std::string read_value)
-		{
-			if (read_value == "red") return enum_test::red;
-			else if (read_value == "blue") return enum_test::blue;
-			else if (read_value == "green") return enum_test::green;
-			else
-			{
-				expect<Error_action::terminating, std::invalid_argument>(
-					[](){return false; },
-					"incorrect str_to_enum read value"
-				);
-			}
-		};
-
 		for (std::string read; std::getline(fin, read); )
 		{
 			if (read[0] == '#') continue;
@@ -56,25 +58,15 @@ Parameters::Parameters(std::ifstream fin)
 			try
 			{
 				split_string<number_of_properties>(read, var_read_properties);
+				auto found_name = var_table.find(var_read_properties[0]);
 				expect<Error_action::throwing, std::invalid_argument>(
-					[=](){return var_table.find(var_read_properties[0]) != var_table.end(); }, 
-					"Incorrect value read"
+					[found_name, this]() {return found_name != var_table.end(); }, 
+					"Can't find read variable name in var_table"
 				);
-				std::string type{var_table[var_read_properties[0]].first};
-				void* var{var_table[var_read_properties[0]].second};
 				std::string value = var_read_properties[1];
-				if (!type.compare("double"))
-					*(static_cast<double*>(var)) = std::stod(value);
-				else if (!type.compare("int"))
-					*(static_cast<int*>(var)) = std::stoi(value);
-				else if (!type.compare("string"))
-					*(static_cast<std::string*>(var)) = value;
-				else if (!type.compare("enum_test"))
-					*(static_cast<enum_test*>(var)) = str_to_enum_test(value);
-				/*std::cout << var_read_properties[0] << " : " << value << std::endl;*/
+				assign_read_value(value, found_name->first);
 			}
-			/*catch (const std::length_error &err)*/
-			catch (std::exception &err)
+			catch (const std::invalid_argument& err)
 			{
 				std::cerr << std::endl << "failure : " << err.what() << std::endl;
 				std::cerr << "Read : " << read << std::endl << std::endl;

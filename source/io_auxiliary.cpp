@@ -54,7 +54,7 @@ int print_filenames(const std::filesystem::path &dir) noexcept
 		{
 			++cnt;
 			const std::string rp_str{static_cast<std::string>(std::filesystem::relative(dir_entry.path(), dir))};
-			std::string fmt = get_format_by_left_side("    ", std::to_string(cnt), " : ", rp_str);
+			const std::string fmt = get_format_by_left_side("    ", std::to_string(cnt), " : ", rp_str);
 			const std::string time_str{time_to_string(dir_entry.last_write_time())};
 			std::cout << dynamic_print(fmt, time_str) << std::endl;
 		}
