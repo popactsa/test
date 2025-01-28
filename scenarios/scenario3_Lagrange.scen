@@ -2,7 +2,10 @@
 x_start 0.0
 x_end 1.0
 nx 100
-nx_fict 1
+wall 0
+	P 1
+	v 1
+	type noslip
 dx 0.1
 CFL 0.5
 nt 100
