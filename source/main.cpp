@@ -25,7 +25,7 @@ int main()
 
 		const Parameters pars(std::ifstream{scenario_file});
 		std::cout << pars.write_file << " " << pars.is_conservative << std::endl;
-		std::cout << pars.walls[0].p << pars.walls[0].v << std::endl;
+		std::cout << pars.walls[0].P << pars.walls[0].v << std::endl;
 		std::cout << static_cast<int>(pars.visc) << std::endl;
 	}
 	return 0;
