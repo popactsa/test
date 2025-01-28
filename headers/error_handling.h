@@ -8,6 +8,22 @@
 
 ////////Tour of C++ 2022 B.Stroustrup p.49/////////
 
+namespace custom_exceptions
+{
+	class multiple_read_definitions : public std::exception
+	{
+		private:
+			std::string what_message;
+		public:
+			explicit multiple_read_definitions(const std::string& msg) : what_message(msg) {}
+			const char* what() const noexcept override
+			{
+				return what_message.c_str();
+			}
+	};
+}
+
+
 enum class Error_action
 {
 	ignore,
@@ -19,9 +35,8 @@ enum class Error_action
 constexpr Error_action default_Error_action = Error_action::throwing;
 
 template<Error_action action, class exc, class C>
-constexpr void expect(const C cond, const char *msg)
+constexpr void expect(const C cond, const std::string& msg)
 {
-	static_assert((void("failure : Provided exception isn't derived from std::exception"), std::is_base_of<std::exception, exc>::value == true));
 	if constexpr (action == Error_action::throwing)
 		if (!cond()) throw exc(msg);
 	if constexpr (action == Error_action::terminating)
@@ -31,7 +46,7 @@ constexpr void expect(const C cond, const char *msg)
 			std::terminate();
 		}
 	if constexpr (action == Error_action::logging)
-		if (!cond()) std::cerr << "expect() failure: " << exc(msg).what() << std::endl;
+		if (!cond()) std::cerr << "expect() failure: " << msg << std::endl;
 	// ignore --> nothing happens
 }
 

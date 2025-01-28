@@ -13,16 +13,19 @@
 #include <array>
 #include <utility>
 #include <iterator>
+#include <set>
 
 #include "io_auxiliary.h"
 #include "error_handling.h"
 
 struct Parameters
 {
+	int nx_all; // calculated implicitly
+	double dx;
+
 	double x_start, x_end;
 	int nx;
-	int nx_all; // calculated implicitly
-	double dx, CFL;
+	double CFL;
 	int nt;
 
 	double gamma;
@@ -53,7 +56,7 @@ struct Parameters
 			noslip,
 			flux
 		} type;
-		int n_fict; // set implicitly depending on type
+		int n_fict = 1; // set implicitly depending on type
 		double p, v;
 	};
 	
@@ -61,12 +64,11 @@ struct Parameters
 	int nt_write;
 	std::string write_file;
 
-	std::unordered_map<std::string_view, std::pair<std::string_view, void*>> var_table
+	std::unordered_map<std::string, std::pair<const std::string, void*>> var_table
 	{
 		{"x_start", {"double", &x_start}},
 		{"x_end", {"double", &x_end}},
 		{"nx", {"int", &nx}},
-		{"dx", {"double", &dx}},
 		{"CFL", {"double", &CFL}},
 		{"nt", {"int", &nt}},
 		{"nt_write", {"int", &nt_write}},
@@ -75,19 +77,24 @@ struct Parameters
 		{"mu0", {"double", &mu0}},
 		{"viscosity", {"viscosity", &visc}},
 		{"ic", {"ic_preset", &ic}},
-		{"is_conservative", {"bool", &is_conservative}},
-		{"wall", {"walls", &walls}}
+		{"is_conservative", {"bool", &is_conservative}}
+	};
+
+	std::set<void*> initialized_variables
+	{
+		&mu0, // adding default-initialized variables
 	};
 
 	Parameters(){};
 	Parameters(std::ifstream);
 
-	void assign_read_value(const std::string&, std::string_view);
+	void assign_read_value(const std::string&, const std::string&);
 	viscosity interp_viscosity(std::string_view str) const;
 	ic_preset interp_ic_preset(std::string_view str) const;
 	wall::w_type interp_wall_type(std::string_view str) const;
-	void assign_read_wall_value(const std::string&, std::string_view, std::unordered_map<std::string_view, std::pair<std::string_view, void*>>);
-	void set_wall_properties(std::ifstream&, const int);
+	void assign_read_wall_value(const std::string&, const std::string&, std::unordered_map<std::string, std::pair<std::string, void*>>, const int);
+	std::string set_wall_properties(std::ifstream&, const int);
+	bool is_all_initialized() const;	
 };
 
 
