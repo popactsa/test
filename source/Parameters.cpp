@@ -248,6 +248,7 @@ Parameters::Parameters(std::ifstream fin)
 		nx_all = nx;
 		for (auto it : walls)
 			nx_all += it.n_fict;
+		dx = (x_end - x_start) / nx;
 	}	
 	std::cout << "===================" << std::endl;
 }

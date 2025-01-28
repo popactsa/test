@@ -57,7 +57,7 @@ struct Parameters
 			noslip,
 			flux
 		} type;
-		int n_fict = 1; // set implicitly depending on type
+		int n_fict = 1; // set implicitly depending on type(will make it later, depending on solver)
 		double P, v;
 	};
 	
