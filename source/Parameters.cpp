@@ -1,33 +1,53 @@
 #include "Parameters.h"
 #include <iterator>
-#include <typeinfo>
-#include <stacktrace>
-#include "io_auxiliary.h"
 
-template<const int size>
-void split_string(const std::string& init, std::array<std::string, size>& result, const char sep)
+Parameters::viscosity Parameters::interp_viscosity(std::string_view str) const
 {
-	std::stringstream ss(init);
-	auto it = result.begin();
-	while (std::getline(ss, *it++, sep))
+	using enum viscosity;
+	std::unordered_map<std::string_view, viscosity> tbl
 	{
-		expect<Error_action::throwing, std::length_error>(
-			[&](){return (std::distance(it, const_cast<std::array<std::string, size>::iterator>(result.end())) >= 0); }, 
-			(std::string("Size of init string is too big, must be = ") + std::to_string(size)).c_str()
-		);
+		{"none", none},
+		{"Neuman", Neuman},
+		{"Latter", Latter},
+		{"linear", linear},
+		{"sum", sum}
+	};
+	auto found = tbl.find(str);
+	if (found != tbl.end()) return found->second;
+	else
+	{
+		std::cerr << "Passed incorrect value : " << str << std::endl;
+		std::cerr << "Possible values : " << std::endl;
+		for (auto it : tbl)
+		{
+			std::cerr << '\t' << it.first << std::endl;
+		}
+		throw std::invalid_argument("Incorrect viscosity value passed");
 	}
-	expect<Error_action::throwing, std::length_error>(
-		[&](){return (std::distance(it, const_cast<std::array<std::string, size>::iterator>(result.end())) == -1); }, 
-		(std::string("Size of init string is too small, must be = ") + std::to_string(size)).c_str()
-	);
 }
 
-enum_test Parameters::interp_enum_test(std::string_view str) const
+Parameters::ic_preset Parameters::interp_ic_preset(std::string_view str) const
 {
-	if (str == "red") return enum_test::red;
-	else if (str == "blue") return enum_test::blue;
-	else if (str == "green") return enum_test::green;
-	else throw std::invalid_argument("Incorrect enum_test value passed");
+	using enum ic_preset;
+	std::unordered_map<std::string_view, ic_preset> tbl
+	{
+		{"test1", test1},
+		{"test2", test2},
+		{"test3", test3},
+		{"test4", test4}
+	};
+	auto found = tbl.find(str);
+	if (found != tbl.end()) return found->second;
+	else
+	{
+		std::cerr << "Passed incorrect value : " << str << std::endl;
+		std::cerr << "Possible values : " << std::endl;
+		for (auto it : tbl)
+		{
+			std::cerr << '\t' << it.first << std::endl;
+		}
+		throw std::invalid_argument("Incorrect ic_preset value passed");
+	}
 }
 
 void Parameters::assign_read_value(const std::string &value, std::string_view key)
@@ -39,10 +59,14 @@ void Parameters::assign_read_value(const std::string &value, std::string_view ke
 		*(static_cast<double*>(ptr)) = std::stod(value);
 	else if (!type.compare("int"))
 		*(static_cast<int*>(ptr)) = std::stoi(value);
+	else if (!type.compare("bool"))
+		*(static_cast<bool*>(ptr)) = static_cast<bool>(std::stoi(value));
 	else if (!type.compare("string"))
 		*(static_cast<std::string*>(ptr)) = value;
-	else if (!type.compare("enum_test"))
-		*(static_cast<enum_test*>(ptr)) = interp_enum_test(value);
+	else if (!type.compare("ic_preset"))
+		*(static_cast<ic_preset*>(ptr)) = interp_ic_preset(value);
+	else if (!type.compare("viscosity"))
+		*(static_cast<viscosity*>(ptr)) = interp_viscosity(value);
 }
 
 Parameters::Parameters(std::ifstream fin)

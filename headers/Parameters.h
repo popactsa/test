@@ -12,39 +12,67 @@
 #include <exception>
 #include <array>
 #include <utility>
+#include <iterator>
 
+#include "io_auxiliary.h"
 #include "error_handling.h"
-
-enum class enum_test
-{
-	red,
-	blue,
-	green
-};
 
 struct Parameters
 {
-	double dummy_parameter;
-	int steps;
-	std::string sentence;
-	enum_test enum_parameter;
+	double x_start, x_end;
+	int nx, nx_fict;
+	double dx, CFL;
+	int nt;
+
+	double gamma;
+	double mu0 = 2;
+	bool is_conservative;
+
+	enum class viscosity
+	{
+		none,
+		Neuman,
+		Latter,
+		linear,
+		sum
+	} visc;
+
+	enum class ic_preset
+	{
+		test1,
+		test2,
+		test3,
+		test4
+	} ic;
+
+	int nt_write;
+	std::string write_file;
 
 	std::unordered_map<std::string_view, std::pair<std::string_view, void*>> var_table
 	{
-		{"dummy_parameter", {"double", &dummy_parameter}},
-		{"steps", {"int", &steps}},
-		{"sentence", {"string", &sentence}},
-		{"enum_parameter", {"enum_test", &enum_parameter}}
+		{"x_start", {"double", &x_start}},
+		{"x_end", {"double", &x_end}},
+		{"nx", {"int", &nx}},
+		{"nx_fict", {"int", &nx_fict}},
+		{"dx", {"double", &dx}},
+		{"CFL", {"double", &CFL}},
+		{"nt", {"int", &nt}},
+		{"nt_write", {"int", &nt_write}},
+		{"write_file", {"string", &write_file}},
+		{"gamma", {"double", &gamma}},
+		{"mu0", {"double", &mu0}},
+		{"viscosity", {"viscosity", &visc}},
+		{"ic", {"ic_preset", &ic}},
+		{"is_conservative", {"bool", &is_conservative}}
 	};
 
 	Parameters(){};
 	Parameters(std::ifstream);
 
 	void assign_read_value(const std::string&, std::string_view);
-	enum_test interp_enum_test(std::string_view) const;
+	viscosity interp_viscosity(std::string_view str) const;
+	ic_preset interp_ic_preset(std::string_view str) const;
 };
 
-template<const int size>
-void split_string(const std::string& init, std::array<std::string, size>& result, const char = ' ');
 
 #endif

@@ -10,6 +10,7 @@ std::string time_to_string(const std::filesystem::file_time_type& ftime) noexcep
 	return str;
 }
 
+
 std::filesystem::path get_path_to_file_in_dir(const std::filesystem::path &dir, int pos, std::string_view postfix)
 {
 	int cnt{0};
@@ -37,11 +38,6 @@ std::string get_format_by_left_side_impl(std::initializer_list<std::string_view>
 	return fmt;
 }
 
-template<typename... type>
-std::string get_format_by_left_side(const type &... args) noexcept
-{
-	return get_format_by_left_side_impl({args...});
-}
 
 int print_filenames(const std::filesystem::path &dir, std::string_view postfix) noexcept
 {

@@ -1,0 +1,14 @@
+#Sample
+x_start 0.0
+x_end 1.0
+nx 100
+nx_fict 1
+dx 0.1
+CFL 0.5
+nt 100
+nt_write 1
+write_file samplesample.csv
+gamma 1.2
+viscosity Neuman
+ic test1
+is_conservative 1
