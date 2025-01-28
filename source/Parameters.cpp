@@ -116,7 +116,7 @@ std::string Parameters::set_wall_properties(std::ifstream& fin, const int n)
 {
 	std::unordered_map<std::string, std::pair<std::string, void*>> w_table
 	{
-		{"P", {"double", &(walls[n].p)}},
+		{"P", {"double", &(walls[n].P)}},
 		{"v", {"double", &(walls[n].v)}},
 		{"type", {"w_type", &(walls[n].type)}}
 	};
@@ -138,14 +138,51 @@ std::string Parameters::set_wall_properties(std::ifstream& fin, const int n)
 			std::string value = var_read_properties[1];
 			assign_read_wall_value(value, found_name->first, w_table, n);
 		}
-		else return read; // this string contains information about non-wall variables
+		else
+		{
+			bool result = true;
+			for (auto it : w_table)
+			{
+				if (!initialized_variables.contains(it.second.second))
+				{
+					if (result == true) std::cerr << "Variables are not initialized : " << std::endl;
+					result = false;
+					std::cerr << '\t' << "Wall " << n << " : " << it.first << std::endl;
+				}
+			}
+			expect<Error_action::terminating, std::exception>(
+				[result]() {return result; }, 
+				"Some variables are not initialized"
+			);
+			return read; // this string contains information about non-wall variables
+		}
 	}
 }
 
-bool Parameters::is_all_initialized() const
+bool Parameters::are_all_walls_initialized(std::vector<int>& initialized) const
 {
 	bool result = true;
-	for (auto it : var_table)
+	for (int i = 0; i < number_of_walls; ++i)
+	{
+		auto ptr = find(initialized.begin(), initialized.end(), i);
+		if (ptr == initialized.end())
+		{
+			if (result == true) std::cerr << "Variables are not initialized : " << std::endl;
+			result = false;
+			std::cerr << '\t' << "Wall " << i << std::endl;
+		}
+	}
+	expect<Error_action::terminating, std::exception>(
+		[result]() {return result; }, 
+		"Some variables are not initialized"
+	);
+	return result;
+}
+
+bool Parameters::are_all_non_walls_variables_initialized() const
+{
+	bool result = true;
+	for (auto it : var_table) // non-walls variables
 	{
 		auto ptr = initialized_variables.find(it.second.second);
 		if (ptr == initialized_variables.end())
@@ -168,21 +205,28 @@ Parameters::Parameters(std::ifstream fin)
 	else
 	{
 		const int number_of_properties = 2;
+		std::vector<int> initialized_walls;
 		for (std::string read; std::getline(fin, read); )
 		{
 			if (read[0] == '#') continue;
 			std::array<std::string, number_of_properties> var_read_properties{}; // name value
 			try
 			{
-				split_string<number_of_properties>(read, var_read_properties);
-				if (var_read_properties[0] == "wall") 
+				bool is_a_wall = true;
+				while (is_a_wall)
 				{
-					expect<Error_action::throwing, std::invalid_argument>(
-						[&var_read_properties, this]() {return std::stoi(var_read_properties[1]) <= static_cast<int>(walls.size()); }, 
-						"Wall number doesn't fit in range"
-					);
-					read = set_wall_properties(fin, std::stoi(var_read_properties[1]));
 					split_string<number_of_properties>(read, var_read_properties);
+					if (var_read_properties[0] == "wall") 
+					{
+						expect<Error_action::throwing, std::invalid_argument>(
+							[&var_read_properties, this]() {return std::stoi(var_read_properties[1]) <= number_of_walls; }, 
+							"Wall number doesn't fit in range"
+						);
+						int wall_number = std::stoi(var_read_properties[1]);
+						read = set_wall_properties(fin, wall_number);
+						initialized_walls.push_back(wall_number);
+					}
+					else is_a_wall = false;
 				}
 				auto found_name = var_table.find(var_read_properties[0]);
 				expect<Error_action::throwing, std::invalid_argument>(
@@ -199,15 +243,12 @@ Parameters::Parameters(std::ifstream fin)
 				std::terminate();
 			}
 		}
+		are_all_non_walls_variables_initialized();
+		are_all_walls_initialized(initialized_walls);
+		nx_all = nx;
+		for (auto it : walls)
+			nx_all += it.n_fict;
 	}	
-	is_all_initialized();
-	expect<Error_action::terminating, std::exception>(
-		[this]() {return is_all_initialized(); }, 
-		"Initialization isn't complete"
-	);
-	nx_all = nx;
-	for (auto it : walls)
-		nx_all += it.n_fict;
 	std::cout << "===================" << std::endl;
 }
 

@@ -14,6 +14,7 @@
 #include <utility>
 #include <iterator>
 #include <set>
+#include <algorithm>
 
 #include "io_auxiliary.h"
 #include "error_handling.h"
@@ -57,10 +58,11 @@ struct Parameters
 			flux
 		} type;
 		int n_fict = 1; // set implicitly depending on type
-		double p, v;
+		double P, v;
 	};
 	
-	std::array<wall, 2> walls;
+	static const int number_of_walls = 2;
+	std::array<wall, number_of_walls> walls;
 	int nt_write;
 	std::string write_file;
 
@@ -82,7 +84,7 @@ struct Parameters
 
 	std::set<void*> initialized_variables
 	{
-		&mu0, // adding default-initialized variables
+		&mu0 // adding default-initialized variables
 	};
 
 	Parameters(){};
@@ -94,7 +96,8 @@ struct Parameters
 	wall::w_type interp_wall_type(std::string_view str) const;
 	void assign_read_wall_value(const std::string&, const std::string&, std::unordered_map<std::string, std::pair<std::string, void*>>, const int);
 	std::string set_wall_properties(std::ifstream&, const int);
-	bool is_all_initialized() const;	
+	bool are_all_non_walls_variables_initialized() const;	
+	bool are_all_walls_initialized(std::vector<int>&) const;
 };
 
 
