@@ -9,8 +9,8 @@ class iSolver
 		virtual void set_initial_conditions() = 0;
 		virtual void get_time_step() = 0;
 		virtual void write_data() = 0;
-		virtual void start() = 0;
-		virtual bool check_parameters() = 0;
+		virtual bool start() = 0;
+		virtual void check_parameters() = 0;
 };
 
 #endif

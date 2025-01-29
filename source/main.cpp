@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include "io_auxiliary.h"
+#include "Lagrange_1D.h"
 #include "Parameters.h"
 
 struct winsize w;
@@ -24,9 +25,15 @@ int main()
 		scenario_file = get_path_to_file_in_dir(scenario_dir, choose_item, postfix);
 
 		const Parameters pars(std::ifstream{scenario_file});
-		std::cout << pars.write_file << " " << pars.is_conservative << std::endl;
-		std::cout << pars.walls[0].P << pars.walls[0].v << std::endl;
-		std::cout << static_cast<int>(pars.visc) << std::endl;
+		Lagrange_1D task(pars);
+		if (task.start())
+		{
+			system("python source/post.py");
+#ifdef WIN32
+#else
+    			system("sxiv graph.png");
+#endif // WIN32
+		}
 	}
 	return 0;
 }

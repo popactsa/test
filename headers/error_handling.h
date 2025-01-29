@@ -10,16 +10,31 @@
 
 namespace custom_exceptions
 {
-	class multiple_read_definitions : public std::exception
+	class parameters_exception : public std::exception
 	{
-		private:
+		protected:
 			std::string what_message;
 		public:
-			explicit multiple_read_definitions(const std::string& msg) : what_message(msg) {}
+			explicit parameters_exception(const std::string& msg) : what_message(msg) {}
 			const char* what() const noexcept override
 			{
 				return what_message.c_str();
 			}
+	};
+	class multiple_read_definitions : public parameters_exception
+	{
+		public:
+			explicit multiple_read_definitions(const std::string& msg) : parameters_exception(msg){}
+	};
+	class invalid_parameter_value : public parameters_exception
+	{
+		public:
+			explicit invalid_parameter_value(const std::string& msg) : parameters_exception(msg){}
+	};
+	class tbd : public parameters_exception
+	{
+		public:
+			explicit tbd(const std::string& msg) : parameters_exception(msg){}
 	};
 }
 
