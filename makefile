@@ -50,6 +50,7 @@ $(D_DIR):
 
 clean:
 	rm -rf $(O_DIR)/* $(TARGET)
+	rm $(D_DIR)/*.csv
 
 print:
 	echo $(SRCS)
