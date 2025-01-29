@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import sys
 
-step = 49
+step = int(sys.argv[1])
 file_name = "data/" + str(step) + ".csv"
 # file_sol = "data/exact_solution.csv"
 data = pd.read_csv(file_name, sep = ' ', header=None)
