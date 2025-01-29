@@ -157,6 +157,7 @@ std::string Parameters::set_wall_properties(std::ifstream& fin, const int n)
 			return read; // this string contains information about non-wall variables
 		}
 	}
+	return std::string("-end-");
 }
 
 bool Parameters::are_all_walls_initialized(std::vector<int>& initialized) const
@@ -206,30 +207,33 @@ Parameters::Parameters(std::ifstream fin)
 	{
 		const int number_of_properties = 2;
 		std::vector<int> initialized_walls;
-		for (std::string read; std::getline(fin, read); )
+		std::string read;
+		/*std::getline(fin, read); //skipping first line which contains solver name*/
+		while(std::getline(fin, read))
 		{
 			if (read[0] == '#') continue;
 			std::array<std::string, number_of_properties> var_read_properties{}; // name value
 			try
 			{
-				bool is_a_wall = true;
-				while (is_a_wall)
+				for (bool is_a_wall = true; is_a_wall;)
 				{
 					split_string<number_of_properties>(read, var_read_properties);
 					if (var_read_properties[0] == "wall") 
 					{
-						expect<Error_action::throwing, std::invalid_argument>(
+						expect<Error_action::throwing, std::invalid_argument>( // std::invalid_argument just to have it worked out equally to std::stoi errors and others
 							[&var_read_properties, this]() {return std::stoi(var_read_properties[1]) <= number_of_walls; }, 
 							"Wall number doesn't fit in range"
 						);
 						int wall_number = std::stoi(var_read_properties[1]);
 						read = set_wall_properties(fin, wall_number);
 						initialized_walls.push_back(wall_number);
+						if (read == std::string("-end-")) break; // "-end-" is returned when wall is initialized last in file
 					}
 					else is_a_wall = false;
 				}
+				if (read == std::string("-end-")) break;
 				auto found_name = var_table.find(var_read_properties[0]);
-				expect<Error_action::throwing, std::invalid_argument>(
+				expect<Error_action::throwing, std::invalid_argument>( // std::invalid_argument just to have it worked out equally to std::stoi errors and others
 					[found_name, this]() {return found_name != var_table.end(); }, 
 					"Can't find read variable name in var_table"
 				);

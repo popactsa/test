@@ -6,10 +6,6 @@ wall 0
 	P 1
 	v 1
 	type noslip
-wall 1
-	P 1
-	v 1
-	type noslip
 CFL 0.5
 nt 100
 nt_write 1
@@ -18,3 +14,7 @@ gamma 1.2
 viscosity Neuman
 ic test1
 is_conservative 1
+wall 1
+	P 1
+	v 1
+	type noslip
