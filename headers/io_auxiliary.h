@@ -17,6 +17,8 @@
 #include "error_handling.h"
 
 extern struct winsize w;
+extern const std::time_t start_time;
+extern const int asc_time_len;
 
 std::string time_to_string(const std::filesystem::file_time_type&) noexcept;
 
@@ -74,27 +76,18 @@ std::string get_format_by_left_side(const type &... args) noexcept
 	return get_format_by_left_side_impl({args...});
 }
 
-inline bool check_rmod(const std::filesystem::path& p)
+bool check_rmod(const std::filesystem::path&) noexcept;
+
+inline void fmt_add_align_impl(std::string& fmt, const std::string& align, std::initializer_list<int> sizes) noexcept
 {
-	namespace fs = std::filesystem;
-	if (!fs::exists(p))
-	{
-		std::cout << p << " doesn't exist" << std::endl;
-		return false;
-	}
-	else if ((fs::status(p).permissions() & fs::perms::owner_read) != fs::perms::owner_read)
-	{
-		std::cout << p << " isn't readable" << std::endl;
-		return false;
-	}
-	else if ((fs::is_empty(p)))
-	{
-		std::cout << p << " is empty" << std::endl;
-		return false;
-	}
-	return true;
+	for (auto it : sizes)
+		fmt += "{:" + align + std::to_string(it) + "}" ;
 }
 
-
+template<typename... Args>
+inline void fmt_add_align(std::string& fmt, const std::string& align, Args&&... args) noexcept
+{
+	fmt_add_align_impl(fmt, align, {args...});
+}
 
 #endif
