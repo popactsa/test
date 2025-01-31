@@ -96,8 +96,9 @@ struct Parameters
 	wall::w_type interp_wall_type(std::string_view str) const;
 	void assign_read_wall_value(const std::string&, const std::string&, std::unordered_map<std::string, std::pair<std::string, void*>>, const int);
 	std::string set_wall_properties(std::ifstream&, const int);
-	bool are_all_non_walls_variables_initialized() const;	
-	bool are_all_walls_initialized(std::vector<int>&) const;
+	bool does_initialized_values_contain_all_w_vars(const int, const std::unordered_map<std::string, std::pair<std::string, void*>>&) const noexcept;
+	bool are_all_non_walls_variables_initialized() const noexcept;	
+	bool are_all_walls_initialized(const std::vector<int>&) const noexcept;
 };
 
 

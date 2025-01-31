@@ -13,7 +13,7 @@ CFL 0.5
 nt 100
 nt_write 1
 write_file samplesample.csv
-gamma 1.2
+gamma 1.4
 viscosity Neuman
 ic test1
 is_conservative 1

@@ -112,6 +112,21 @@ void Parameters::assign_read_wall_value(const std::string &value, const std::str
 	initialized_variables.insert(ptr);
 }
 
+bool Parameters::does_initialized_values_contain_all_w_vars(const int n, const std::unordered_map<std::string, std::pair<std::string, void*>>& w_table) const noexcept
+{
+	bool result = true;
+	for (const auto &it : w_table)
+	{
+		if (!initialized_variables.contains(it.second.second))
+		{
+			if (result == true) std::cerr << "Variables are not initialized : " << std::endl;
+			result = false;
+			std::cerr << '\t' << "Wall " << n << " : " << it.first << std::endl;
+		}
+	}
+	return result;
+}
+
 std::string Parameters::set_wall_properties(std::ifstream& fin, const int n)
 {
 	std::unordered_map<std::string, std::pair<std::string, void*>> w_table
@@ -125,6 +140,7 @@ std::string Parameters::set_wall_properties(std::ifstream& fin, const int n)
 		if (read[0] == '#') continue;
 		else if (read[0] == '\t')
 		{
+			if (read[1] == '#') continue;
 			const int number_of_properties = 2;
 			std::array<std::string, number_of_properties> var_read_properties{}; // name value
 			split_string<number_of_properties>(read, var_read_properties);
@@ -140,27 +156,21 @@ std::string Parameters::set_wall_properties(std::ifstream& fin, const int n)
 		}
 		else
 		{
-			bool result = true;
-			for (auto it : w_table)
-			{
-				if (!initialized_variables.contains(it.second.second))
-				{
-					if (result == true) std::cerr << "Variables are not initialized : " << std::endl;
-					result = false;
-					std::cerr << '\t' << "Wall " << n << " : " << it.first << std::endl;
-				}
-			}
-			expect<Error_action::terminating, std::exception>(
-				[result]() {return result; }, 
+			expect<Error_action::terminating, custom_exceptions::parameters_exception>(
+				[this, n, &w_table]() {return does_initialized_values_contain_all_w_vars(n, w_table); }, 
 				"Some variables are not initialized"
 			);
 			return read; // this string contains information about non-wall variables
 		}
 	}
+	expect<Error_action::terminating, custom_exceptions::parameters_exception>(
+		[this, n, &w_table]() {return does_initialized_values_contain_all_w_vars(n, w_table); }, 
+		"Some variables are not initialized"
+	);
 	return std::string("-end-");
 }
 
-bool Parameters::are_all_walls_initialized(std::vector<int>& initialized) const
+bool Parameters::are_all_walls_initialized(const std::vector<int>& initialized) const noexcept
 {
 	bool result = true;
 	for (int i = 0; i < number_of_walls; ++i)
@@ -173,14 +183,10 @@ bool Parameters::are_all_walls_initialized(std::vector<int>& initialized) const
 			std::cerr << '\t' << "Wall " << i << std::endl;
 		}
 	}
-	expect<Error_action::terminating, std::exception>(
-		[result]() {return result; }, 
-		"Some variables are not initialized"
-	);
 	return result;
 }
 
-bool Parameters::are_all_non_walls_variables_initialized() const
+bool Parameters::are_all_non_walls_variables_initialized() const noexcept
 {
 	bool result = true;
 	for (auto it : var_table) // non-walls variables
@@ -193,10 +199,6 @@ bool Parameters::are_all_non_walls_variables_initialized() const
 			std::cerr << '\t' << it.first << std::endl;
 		}
 	}
-	expect<Error_action::terminating, std::exception>(
-		[result]() {return result; }, 
-		"Some variables are not initialized"
-	);
 	return result;
 }
 
@@ -253,8 +255,14 @@ Parameters::Parameters(std::ifstream fin)
 				std::terminate();
 			}
 		}
-		are_all_non_walls_variables_initialized();
-		are_all_walls_initialized(initialized_walls);
+		expect<Error_action::terminating, custom_exceptions::parameters_exception>(
+			[this]() {return are_all_non_walls_variables_initialized(); }, 
+			"Some variables are not initialized"
+		);
+		expect<Error_action::terminating, custom_exceptions::parameters_exception>(
+			[this, &initialized_walls]() {return are_all_walls_initialized(initialized_walls); }, 
+			"Some variables are not initialized"
+		);
 		nx_all = nx;
 		for (auto it : walls)
 			nx_all += it.n_fict;
