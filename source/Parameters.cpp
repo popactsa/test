@@ -89,7 +89,7 @@ void Parameters::assign_read_value(const std::string& value, const std::string& 
 		*(static_cast<ic_preset*>(ptr)) = interp_ic_preset(value);
 	else if (!type.compare("viscosity"))
 		*(static_cast<viscosity*>(ptr)) = interp_viscosity(value);
-	expect<Error_action::logging, std::exception>(
+	expect<Error_action::logging, custom_exceptions::multiple_read_definitions>(
 		[ptr, key, this]() {return !initialized_variables.contains(ptr); }, 
 		static_cast<std::string>("Variable ") + key + static_cast<std::string>(" is already defined")
 	); //maybe that's too expensive to have that must static_cast's
@@ -105,7 +105,7 @@ void Parameters::assign_read_wall_value(const std::string &value, const std::str
 		*(static_cast<double*>(ptr)) = std::stod(value);
 	else if (!type.compare("w_type"))
 		*(static_cast<wall::w_type*>(ptr)) = interp_wall_type(value);
-	expect<Error_action::logging, std::exception>(
+	expect<Error_action::logging, custom_exceptions::multiple_read_definitions>(
 		[ptr, key, this]() {return !initialized_variables.contains(ptr); }, 
 		static_cast<std::string>("Variable ") + key + static_cast<std::string>(" <- wall ") + std::to_string(n) + static_cast<std::string>(" is already defined")
 	); //maybe that's too expensive to have that must static_cast's
