@@ -10,6 +10,8 @@ main
 
 object_files/*
 
+data/*
+
 source/~/*
 
 headers/~/*

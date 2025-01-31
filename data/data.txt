@@ -1,2 +1,0 @@
-double dummy_parameter 1.0
-int steps 3
