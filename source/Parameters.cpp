@@ -209,9 +209,15 @@ Parameters::Parameters(std::ifstream fin)
 		std::vector<int> initialized_walls;
 		std::string read;
 		/*std::getline(fin, read); //skipping first line which contains solver name*/
+		bool is_solver_name_read = false;
 		while(std::getline(fin, read))
 		{
 			if (read[0] == '#') continue;
+			if (!is_solver_name_read)
+			{
+				is_solver_name_read = true;
+				continue;
+			}
 			std::array<std::string, number_of_properties> var_read_properties{}; // name value
 			try
 			{
@@ -253,6 +259,7 @@ Parameters::Parameters(std::ifstream fin)
 		for (auto it : walls)
 			nx_all += it.n_fict;
 		dx = (x_end - x_start) / nx;
+		fin.close();
 	}	
 	std::cout << "===================" << std::endl;
 }

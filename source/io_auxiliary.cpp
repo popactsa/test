@@ -63,14 +63,16 @@ int print_filenames(const std::filesystem::path &dir, std::string_view postfix) 
 {
 	int cnt{0};
 
-	std::string fmt = "      {} : ";
-	const int init_size = fmt.size() - 1;
-	const int max_file_name_size = 35;
-	const int max_solver_name_size = 15;
-	fmt_add_align(fmt, ".<",
-			max_file_name_size, max_solver_name_size);
-	fmt_add_align(fmt, ".>", w.ws_col - init_size - max_file_name_size - max_solver_name_size);
-	std::string_view name = "Lagrange_1D";
+	std::string fmt = "      {:>2} : "; // supposing you have lower than 100 solvers..
+	const int init_size = 11; // depending on fmt
+	using namespace std::literals::string_literals;
+	using namespace io_constants;
+	fmt_add_align(fmt, {
+			{".<"s, max_file_name_size},
+			{".<"s, max_solver_name_size},
+			{".>"s, w.ws_col - init_size - max_file_name_size - max_solver_name_size}}
+			);
+
 	for (auto const& dir_entry : std::filesystem::directory_iterator{dir, std::filesystem::directory_options::skip_permission_denied})
 	{
 		auto file_perms = std::filesystem::status(dir_entry).permissions();
@@ -78,9 +80,25 @@ int print_filenames(const std::filesystem::path &dir, std::string_view postfix) 
 		if ((file_perms & owner_read) == owner_read && dir_entry.path().string().ends_with(postfix))
 		{
 			++cnt;
+			std::ifstream fin(dir_entry.path());
+			std::string solver_type = "unknown";
+			if (fin.is_open())
+			{
+				while(std::getline(fin, solver_type))
+				{
+					if (solver_type[0] == '#') continue;
+					else
+					{
+						auto found = solver_types_table.find(solver_type);
+						if (found == solver_types_table.end()) solver_type = "unknown";
+						break;
+					}
+				}
+				fin.close();
+			}
 			std::string rp_str{static_cast<std::string>(std::filesystem::relative(dir_entry.path(), dir))};
 			std::string time_str{time_to_string(dir_entry.last_write_time())};
-			std::cout << std::vformat(fmt, std::make_format_args(cnt, rp_str, name, time_str)) << std::endl;
+			std::cout << std::vformat(fmt, std::make_format_args(cnt, rp_str, solver_type, time_str)) << std::endl;
 		}
 	}
 	return cnt;

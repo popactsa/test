@@ -10,7 +10,7 @@
 
 struct winsize w;
 const std::time_t start_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-const int asc_time_len = (static_cast<std::string>(std::asctime(std::localtime(&start_time)))).length();
+const int io_constants::asc_time_len = (static_cast<std::string>(std::asctime(std::localtime(&start_time)))).length();
 
 int main()
 {

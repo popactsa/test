@@ -5,6 +5,7 @@
 #include <string>
 #include <filesystem>
 #include <format>
+#include <fstream>
 #include <chrono>
 #include <ctime>
 #include <sys/ioctl.h>
@@ -13,12 +14,31 @@
 #include <array>
 #include <cmath>
 #include <initializer_list>
+#include <unordered_map>
 
 #include "error_handling.h"
 
 extern struct winsize w;
 extern const std::time_t start_time;
-extern const int asc_time_len;
+
+namespace io_constants
+{
+	extern const int asc_time_len;
+	constexpr int max_file_name_size = 35;
+	constexpr int max_solver_name_size = 15;
+}
+
+enum class solver_types
+{
+	unknown,
+	Lagrange_1D
+};
+
+static std::unordered_map<std::string, solver_types> solver_types_table
+{
+	{"unknown", solver_types::unknown},
+	{"Lagrange 1D", solver_types::Lagrange_1D}
+};
 
 std::string time_to_string(const std::filesystem::file_time_type&) noexcept;
 
@@ -62,32 +82,24 @@ inline int print_filenames(const std::filesystem::path& dir) noexcept
 
 int choose_in_range(const int, const int);
 
-template<typename... Args>
-inline std::string dynamic_print(std::string_view fmt_str, Args&&... args)
-{
-	return std::vformat(fmt_str, std::make_format_args(args...));
-}
-
-std::string get_format_by_left_side_impl(std::initializer_list<std::string_view>) noexcept;
-
-template<typename... type>
-std::string get_format_by_left_side(const type &... args) noexcept
-{
-	return get_format_by_left_side_impl({args...});
-}
-
 bool check_rmod(const std::filesystem::path&) noexcept;
 
-inline void fmt_add_align_impl(std::string& fmt, const std::string& align, std::initializer_list<int> sizes) noexcept
+void fmt_add_align(std::string& fmt, const std::string& align, const std::vector<int>& sizes) noexcept;
+
+inline void fmt_add_align(std::string& fmt, const std::string& align, const std::vector<int>& sizes) noexcept
 {
 	for (auto it : sizes)
-		fmt += "{:" + align + std::to_string(it) + "}" ;
+	{
+		fmt += "{:";
+		fmt += align;
+		fmt += std::to_string(it);
+		fmt += "}";
+	}
 }
 
-template<typename... Args>
-inline void fmt_add_align(std::string& fmt, const std::string& align, Args&&... args) noexcept
+inline void fmt_add_align(std::string& fmt, const std::vector<std::pair<std::string, int>>& align_n_sizes) noexcept
 {
-	fmt_add_align_impl(fmt, align, {args...});
+	for (auto [align, size] : align_n_sizes) fmt_add_align(fmt, align, {size});
 }
 
 #endif
