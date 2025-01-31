@@ -20,6 +20,7 @@
 
 extern struct winsize w;
 extern const std::time_t start_time;
+extern const std::chrono::time_point<std::chrono::system_clock> start_tick_time;
 
 namespace io_constants
 {
@@ -41,6 +42,21 @@ static std::unordered_map<std::string, solver_types> solver_types_table
 };
 
 std::string time_to_string(const std::filesystem::file_time_type&) noexcept;
+
+template<typename timeformat>
+inline int count_time_between(std::chrono::time_point<std::chrono::system_clock>& from, const std::chrono::time_point<std::chrono::system_clock>& to)
+{
+	int result = std::chrono::duration_cast<timeformat>(to - from).count();
+	from = to;
+	return result;
+}
+
+template<typename timeformat>
+inline int count_time_between_const(const std::chrono::time_point<std::chrono::system_clock>& from, const std::chrono::time_point<std::chrono::system_clock>& to)
+{
+	int result = std::chrono::duration_cast<timeformat>(to - from).count();
+	return result;
+}
 
 std::filesystem::path get_path_to_file_in_dir(const std::filesystem::path&, int, std::string_view);
 

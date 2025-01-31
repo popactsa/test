@@ -4,6 +4,7 @@ bool Lagrange_1D::start()
 {
 	try
 	{
+		auto prev_tick_time = start_tick_time;
 		check_parameters();
 		P.resize(par.nx_all);
 		rho.resize(par.nx_all);
@@ -12,15 +13,22 @@ bool Lagrange_1D::start()
 		v.resize(par.nx_all + 1);
 		x.resize(par.nx_all + 1);
 		omega.resize(par.nx_all);
+		typedef std::chrono::milliseconds t_format;
+		std::cout << "Allocation : done!" << std::endl;
+		std::cout << "Processing time : " << count_time_between<t_format>(prev_tick_time, std::chrono::system_clock::now()) << " ms" << std::endl << std::endl;
 
 		set_initial_conditions(); // only nx_fict = 1
 		for (step = 1; step < par.nt; ++step)
 		{
 			solve_step();
 			t += dt;
-			if (step % par.nt_write == 0) write_data();
+			if (step % par.nt_write == 0)	write_data();
 		}
+		std::cout << "Lagrange 1D calculations : done!" << std::endl;
+		std::cout << "Processing time : " << count_time_between<t_format>(prev_tick_time, std::chrono::system_clock::now()) << " ms" << std::endl;
+		std::cout << "=================" << std::endl;
 		std::cout << "Lagrange_1D : done!" << std::endl;
+		std::cout << "Processing time : " << count_time_between_const<t_format>(start_tick_time, std::chrono::system_clock::now()) << " ms" << std::endl << std::endl;
 		return true;	
 	}
 	catch(const std::exception& exc)

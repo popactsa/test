@@ -6,7 +6,6 @@
 #include <fstream>
 #include <vector>
 #include <string>
-#include <cstring>
 #include <unordered_map>
 #include <iomanip>
 #include <exception>
