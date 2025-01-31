@@ -4,7 +4,8 @@ bool Lagrange_1D::start()
 {
 	try
 	{
-		auto prev_tick_time = start_tick_time;
+		const auto solve_start_tick_time = std::chrono::system_clock::now();
+		auto prev_tick_time = std::chrono::system_clock::now();
 		check_parameters();
 		P.resize(par.nx_all);
 		rho.resize(par.nx_all);
@@ -28,7 +29,7 @@ bool Lagrange_1D::start()
 		std::cout << "Processing time : " << count_time_between<t_format>(prev_tick_time, std::chrono::system_clock::now()) << " ms" << std::endl;
 		std::cout << "=================" << std::endl;
 		std::cout << "Lagrange_1D : done!" << std::endl;
-		std::cout << "Processing time : " << count_time_between_const<t_format>(start_tick_time, std::chrono::system_clock::now()) << " ms" << std::endl << std::endl;
+		std::cout << "Processing time : " << count_time_between_const<t_format>(solve_start_tick_time, std::chrono::system_clock::now()) << " ms" << std::endl << std::endl;
 		return true;	
 	}
 	catch(const std::exception& exc)
