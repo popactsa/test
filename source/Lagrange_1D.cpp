@@ -14,7 +14,7 @@ bool Lagrange_1D::start()
 		v.resize(par.nx_all + 1);
 		x.resize(par.nx_all + 1);
 		omega.resize(par.nx_all);
-		typedef std::chrono::milliseconds t_format;
+		using t_format = std::chrono::milliseconds;
 		std::cout << "Allocation : done!" << std::endl;
 		std::cout << "Processing time : " << count_time_between<t_format>(prev_tick_time, std::chrono::system_clock::now()) << " ms" << std::endl << std::endl;
 

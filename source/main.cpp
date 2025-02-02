@@ -11,7 +11,6 @@
 struct winsize w;
 const std::chrono::time_point<std::chrono::system_clock> start_tick_time = std::chrono::system_clock::now();
 const std::time_t start_time = std::chrono::system_clock::to_time_t(start_tick_time);
-const int io_constants::asc_time_len = (static_cast<std::string>(std::asctime(std::localtime(&start_time)))).length();
 
 int main()
 {

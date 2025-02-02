@@ -15,6 +15,7 @@
 #include <cmath>
 #include <initializer_list>
 #include <unordered_map>
+#include <concepts>
 
 #include "error_handling.h"
 
@@ -24,9 +25,9 @@ extern const std::chrono::time_point<std::chrono::system_clock> start_tick_time;
 
 namespace io_constants
 {
-	extern const int asc_time_len;
-	constexpr int max_file_name_size = 35;
-	constexpr int max_solver_name_size = 15;
+	 inline constexpr int asc_time_len = 25;
+	 inline constexpr int max_file_name_size = 25;
+	 inline constexpr int max_solver_name_size = 15;
 }
 
 enum class solver_types
@@ -44,6 +45,7 @@ static std::unordered_map<std::string, solver_types> solver_types_table
 std::string time_to_string(const std::filesystem::file_time_type&) noexcept;
 
 template<typename timeformat>
+	requires std::common_with<timeformat, std::chrono::seconds>
 inline int count_time_between(std::chrono::time_point<std::chrono::system_clock>& from, const std::chrono::time_point<std::chrono::system_clock>& to)
 {
 	int result = std::chrono::duration_cast<timeformat>(to - from).count();
@@ -52,6 +54,7 @@ inline int count_time_between(std::chrono::time_point<std::chrono::system_clock>
 }
 
 template<typename timeformat>
+	requires std::common_with<timeformat, std::chrono::seconds>
 inline int count_time_between_const(const std::chrono::time_point<std::chrono::system_clock>& from, const std::chrono::time_point<std::chrono::system_clock>& to)
 {
 	int result = std::chrono::duration_cast<timeformat>(to - from).count();
@@ -99,8 +102,6 @@ inline int print_filenames(const std::filesystem::path& dir) noexcept
 int choose_in_range(const int, const int);
 
 bool check_rmod(const std::filesystem::path&) noexcept;
-
-void fmt_add_align(std::string& fmt, const std::string& align, const std::vector<int>& sizes) noexcept;
 
 inline void fmt_add_align(std::string& fmt, const std::string& align, const std::vector<int>& sizes) noexcept
 {
