@@ -72,11 +72,12 @@ Parameters::ic_preset Parameters::interp_ic_preset(std::string_view str) const
 	}
 }
 
-void Parameters::assign_read_value(const std::string& value, const std::string& key)
+void Parameters::assign_read_value(const std::string& value, std::string_view key)
 {
 	// std::stoi, stod requires for std::string, so passing value as std::string_view is meaningless i think
-	std::string type(var_table[key].first);
-	void* ptr{var_table[key].second};
+	auto found = var_table.find(key);
+	std::string_view type(found->second.first);
+	void* ptr{found->second.second};
 	if (!type.compare("double"))
 		*(static_cast<double*>(ptr)) = std::stod(value);
 	else if (!type.compare("int"))
@@ -91,28 +92,29 @@ void Parameters::assign_read_value(const std::string& value, const std::string& 
 		*(static_cast<viscosity*>(ptr)) = interp_viscosity(value);
 	expect<Error_action::logging, custom_exceptions::multiple_read_definitions>(
 		[ptr, key, this]() {return !initialized_variables.contains(ptr); }, 
-		static_cast<std::string>("Variable ") + key + static_cast<std::string>(" is already defined")
+		static_cast<std::string>("Variable ") + found->first + static_cast<std::string>(" is already defined")
 	); //maybe that's too expensive to have that must static_cast's
 	initialized_variables.insert(ptr);
 }
 
-void Parameters::assign_read_wall_value(const std::string &value, const std::string& key, std::unordered_map<std::string, std::pair<std::string, void*>> w_table, const int n)
+void Parameters::assign_read_wall_value(const std::string &value, std::string_view key, std::unordered_map<std::string, std::pair<std::string, void*>, string_hash, std::equal_to<>> w_table, const int n)
 {
 	// std::stoi, stod requires for std::string, so passing value as std::string_view is meaningless i think
-	std::string type(w_table[key].first);
-	void* ptr{w_table[key].second};
+	auto found = w_table.find(key);
+	std::string_view type(found->second.first);
+	void* ptr{found->second.second};
 	if (!type.compare("double"))
 		*(static_cast<double*>(ptr)) = std::stod(value);
 	else if (!type.compare("w_type"))
 		*(static_cast<wall::w_type*>(ptr)) = interp_wall_type(value);
 	expect<Error_action::logging, custom_exceptions::multiple_read_definitions>(
 		[ptr, key, this]() {return !initialized_variables.contains(ptr); }, 
-		static_cast<std::string>("Variable ") + key + static_cast<std::string>(" <- wall ") + std::to_string(n) + static_cast<std::string>(" is already defined")
+		static_cast<std::string>("Variable ") + found->first + static_cast<std::string>(" <- wall ") + std::to_string(n) + static_cast<std::string>(" is already defined")
 	); //maybe that's too expensive to have that must static_cast's
 	initialized_variables.insert(ptr);
 }
 
-bool Parameters::does_initialized_values_contain_all_w_vars(const int n, const std::unordered_map<std::string, std::pair<std::string, void*>>& w_table) const noexcept
+bool Parameters::does_initialized_values_contain_all_w_vars(const int n, const std::unordered_map<std::string, std::pair<std::string, void*>, string_hash, std::equal_to<>>& w_table) const noexcept
 {
 	bool result = true;
 	for (const auto &it : w_table)
@@ -129,7 +131,7 @@ bool Parameters::does_initialized_values_contain_all_w_vars(const int n, const s
 
 std::string Parameters::set_wall_properties(std::ifstream& fin, const int n)
 {
-	std::unordered_map<std::string, std::pair<std::string, void*>> w_table
+	std::unordered_map<std::string, std::pair<std::string, void*>, string_hash, std::equal_to<>> w_table
 	{
 		{"P", {"double", &(walls[n].P)}},
 		{"v", {"double", &(walls[n].v)}},
@@ -143,7 +145,7 @@ std::string Parameters::set_wall_properties(std::ifstream& fin, const int n)
 			if (read[1] == '#') continue;
 			const int number_of_properties = 2;
 			std::array<std::string, number_of_properties> var_read_properties{}; // name value
-			split_string<number_of_properties>(read, var_read_properties);
+			split_string(read, var_read_properties);
 			var_read_properties[0].erase(0, 1); // pop aligning character
 
 			auto found_name = w_table.find(var_read_properties[0]);
@@ -210,7 +212,6 @@ Parameters::Parameters(std::ifstream fin)
 		const int number_of_properties = 2;
 		std::vector<int> initialized_walls;
 		std::string read;
-		/*std::getline(fin, read); //skipping first line which contains solver name*/
 		bool is_solver_name_read = false;
 		while(std::getline(fin, read))
 		{
@@ -225,7 +226,7 @@ Parameters::Parameters(std::ifstream fin)
 			{
 				for (bool is_a_wall = true; is_a_wall;)
 				{
-					split_string<number_of_properties>(read, var_read_properties);
+					split_string(read, var_read_properties);
 					if (var_read_properties[0] == "wall") 
 					{
 						expect<Error_action::throwing, std::invalid_argument>( // std::invalid_argument just to have it worked out equally to std::stoi errors and others
@@ -248,7 +249,7 @@ Parameters::Parameters(std::ifstream fin)
 				std::string value = var_read_properties[1];
 				assign_read_value(value, found_name->first);
 			}
-			catch (const std::invalid_argument& err)
+			catch (const std::exception& err)
 			{
 				std::cerr << std::endl << "failure : " << err.what() << std::endl;
 				std::cerr << "Read : " << read << std::endl << std::endl;

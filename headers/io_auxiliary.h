@@ -17,6 +17,7 @@
 #include <unordered_map>
 #include <concepts>
 
+#include "custom_concepts.h"
 #include "error_handling.h"
 
 extern struct winsize w;
@@ -70,28 +71,32 @@ inline std::filesystem::path get_path_to_file_in_dir(const std::filesystem::path
 
 int print_filenames(const std::filesystem::path&, std::string_view) noexcept;
 
-template<const int size>
-void split_string(const std::string& init, std::array<std::string, size>& result, const char sep)
+template<typename C>
+	requires custom_concepts::Container<C> && std::same_as<typename C::value_type, std::string>
+void split_string(std::string_view init, C& result, const char sep) // if get rid of expect-assertions, function can be declared constexpr
 {
-	std::stringstream ss(init);
 	auto it = result.begin();
-	while (std::getline(ss, *it++, sep))
+	std::size_t prev{0};
+	for (std::size_t current(init.find(sep, prev)); current != init.npos; prev = current + 1, current = init.find(sep, prev))
 	{
 		expect<Error_action::throwing, std::length_error>(
-			[&](){return (std::distance(it, const_cast<std::array<std::string, size>::iterator>(result.end())) >= 0); }, 
-			(std::string("Size of init string is too big, must be = ") + std::to_string(size)).c_str()
+			[&](){return (std::distance(it, const_cast<C::iterator>(result.end())) > 0); }, 
+			(std::string("Size of init string is too small, must be = ") + std::to_string(std::size(result))).c_str()
 		);
+		*it++ = init.substr(prev, current - prev);
 	}
+	*it++ = init.substr(prev);
 	expect<Error_action::throwing, std::length_error>(
-		[&](){return (std::distance(it, const_cast<std::array<std::string, size>::iterator>(result.end())) == -1); }, 
-		(std::string("Size of init string is too small, must be = ") + std::to_string(size)).c_str()
+		[&](){return (std::distance(it, const_cast<C::iterator>(result.end())) == 0); }, 
+		(std::string("Size of init string is too large, must be = ") + std::to_string(std::size(result))).c_str()
 	);
 }
 
-template<const int size>
-inline void split_string(const std::string& init, std::array<std::string, size>& result)
+template<typename C>
+	requires custom_concepts::Container<C> && std::same_as<typename C::value_type, std::string>
+inline void split_string(std::string_view init, C& result)
 {
-	return split_string<size>(init, result, ' ');
+	split_string(init, result, ' ');
 }
 
 inline int print_filenames(const std::filesystem::path& dir) noexcept

@@ -11,12 +11,16 @@
 #include <exception>
 #include <array>
 #include <utility>
-#include <iterator>
 #include <set>
 #include <algorithm>
 
+#include <concepts>
+#include <iterator>
+#include <type_traits>
+
 #include "io_auxiliary.h"
 #include "error_handling.h"
+#include "custom_concepts.h"
 
 class Parameters
 {
@@ -70,7 +74,16 @@ class Parameters
 		Parameters(std::ifstream);
 	
 	protected:
-		std::unordered_map<std::string, std::pair<const std::string, void*>> var_table
+		viscosity interp_viscosity(std::string_view str) const;
+		ic_preset interp_ic_preset(std::string_view str) const;
+		wall::w_type interp_wall_type(std::string_view str) const;
+	
+		void assign_read_value(const std::string&, std::string_view);
+		void assign_read_wall_value(const std::string&, std::string_view, std::unordered_map<std::string, std::pair<std::string, void*>, string_hash, std::equal_to<>>, const int);
+		std::string set_wall_properties(std::ifstream&, const int);
+
+	private:
+		std::unordered_map<std::string, std::pair<const std::string, void*>, string_hash, std::equal_to<>> var_table
 		{
 			{"x_start", {"double", &x_start}},
 			{"x_end", {"double", &x_end}},
@@ -91,15 +104,7 @@ class Parameters
 			&mu0 // adding default-initialized variables
 		};
 
-		viscosity interp_viscosity(std::string_view str) const;
-		ic_preset interp_ic_preset(std::string_view str) const;
-		wall::w_type interp_wall_type(std::string_view str) const;
-
-		void assign_read_value(const std::string&, const std::string&);
-		void assign_read_wall_value(const std::string&, const std::string&, std::unordered_map<std::string, std::pair<std::string, void*>>, const int);
-		std::string set_wall_properties(std::ifstream&, const int);
-
-		bool does_initialized_values_contain_all_w_vars(const int, const std::unordered_map<std::string, std::pair<std::string, void*>>&) const noexcept;
+		bool does_initialized_values_contain_all_w_vars(const int, const std::unordered_map<std::string, std::pair<std::string, void*>, string_hash, std::equal_to<>>&) const noexcept;
 		bool are_all_non_walls_variables_initialized() const noexcept;	
 		bool are_all_walls_initialized(const std::vector<int>&) const noexcept;
 };
