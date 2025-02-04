@@ -97,7 +97,7 @@ void Parameters::assign_read_value(const std::string& value, std::string_view ke
 	initialized_variables.insert(ptr);
 }
 
-void Parameters::assign_read_wall_value(const std::string &value, std::string_view key, const std::unordered_map<std::string, std::pair<std::string, void*>, string_hash, std::equal_to<>>& w_table, const int n)
+void Parameters::assign_read_wall_value(const std::string &value, std::string_view key, const ums_w_hs<std::string, std::pair<std::string, void*>>& w_table, const int n)
 {
 	// std::stoi, stod requires for std::string, so passing value as std::string_view is meaningless i think
 	auto found = w_table.find(key);
@@ -114,7 +114,7 @@ void Parameters::assign_read_wall_value(const std::string &value, std::string_vi
 	initialized_variables.insert(ptr);
 }
 
-bool Parameters::does_initialized_values_contain_all_w_vars(const int n, const std::unordered_map<std::string, std::pair<std::string, void*>, string_hash, std::equal_to<>>& w_table) const noexcept
+bool Parameters::does_initialized_values_contain_all_w_vars(const int n, const ums_w_hs<std::string, std::pair<std::string, void*>>& w_table) const noexcept
 {
 	bool result = true;
 	for (const auto &it : w_table)
@@ -131,7 +131,7 @@ bool Parameters::does_initialized_values_contain_all_w_vars(const int n, const s
 
 std::string Parameters::set_wall_properties(std::ifstream& fin, const int n)
 {
-	std::unordered_map<std::string, std::pair<std::string, void*>, string_hash, std::equal_to<>> w_table
+	ums_w_hs<std::string, std::pair<std::string, void*>> w_table
 	{
 		{"P", {"double", &(walls[n].P)}},
 		{"v", {"double", &(walls[n].v)}},

@@ -22,6 +22,10 @@
 #include "error_handling.h"
 #include "custom_concepts.h"
 
+// std::unordered_map w/ string_hash for heterogenious search
+template<typename key, typename value>
+using ums_w_hs = std::unordered_map<key, value, string_hash, std::equal_to<>>;
+
 class Parameters
 {
 	public:
@@ -79,11 +83,11 @@ class Parameters
 		wall::w_type interp_wall_type(std::string_view str) const;
 	
 		void assign_read_value(const std::string&, std::string_view);
-		void assign_read_wall_value(const std::string&, std::string_view, const std::unordered_map<std::string, std::pair<std::string, void*>, string_hash, std::equal_to<>>&, const int);
+		void assign_read_wall_value(const std::string&, std::string_view, const ums_w_hs<std::string, std::pair<std::string, void*>>&, const int);
 		std::string set_wall_properties(std::ifstream&, const int);
 
 	private:
-		std::unordered_map<std::string, std::pair<const std::string, void*>, string_hash, std::equal_to<>> var_table
+		ums_w_hs<std::string, std::pair<std::string, void*>> var_table
 		{
 			{"x_start", {"double", &x_start}},
 			{"x_end", {"double", &x_end}},
@@ -104,7 +108,7 @@ class Parameters
 			&mu0 // adding default-initialized variables
 		};
 
-		bool does_initialized_values_contain_all_w_vars(const int, const std::unordered_map<std::string, std::pair<std::string, void*>, string_hash, std::equal_to<>>&) const noexcept;
+		bool does_initialized_values_contain_all_w_vars(const int, const ums_w_hs<std::string, std::pair<std::string, void*>>&) const noexcept;
 		bool are_all_non_walls_variables_initialized() const noexcept;	
 		bool are_all_walls_initialized(const std::vector<int>&) const noexcept;
 };
