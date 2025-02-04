@@ -62,6 +62,20 @@ inline int count_time_between_const(const std::chrono::time_point<std::chrono::s
 	return result;
 }
 
+template<typename F>
+struct final_action
+{
+	explicit final_action(F f): act(f){}
+	~final_action() {act(); }
+	F act;
+};
+
+template<typename F>
+[[nodiscard]] auto print_time_between_on_exit(F f)
+{
+	return final_action{f};
+}
+
 std::filesystem::path get_path_to_file_in_dir(const std::filesystem::path&, int, std::string_view);
 
 inline std::filesystem::path get_path_to_file_in_dir(const std::filesystem::path &dir, int pos)

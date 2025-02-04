@@ -206,7 +206,15 @@ bool Parameters::are_all_non_walls_variables_initialized() const noexcept
 
 Parameters::Parameters(std::ifstream fin)
 {
+	using t_format = std::chrono::milliseconds;
 	const auto init_start_tick_time = std::chrono::system_clock::now();
+	auto print_solve_time = print_time_between_on_exit([&]()
+		{
+			std::cout << "Reading from file : done!" << std::endl;
+			std::cout << "Processing time : " << count_time_between_const<t_format>(init_start_tick_time, std::chrono::system_clock::now()) << " ms" << std::endl << std::endl;
+			std::cout << "===================" << std::endl;
+		}
+	);
 	if (!fin.is_open()) std::cout << "failed to open" << std::endl;
 	else
 	{
@@ -271,9 +279,5 @@ Parameters::Parameters(std::ifstream fin)
 		dx = (x_end - x_start) / nx;
 		fin.close();
 	}	
-	using t_format = std::chrono::milliseconds;
-	std::cout << "Reading from file : done!" << std::endl;
-	std::cout << "Processing time : " << count_time_between_const<t_format>(init_start_tick_time, std::chrono::system_clock::now()) << " ms" << std::endl << std::endl;
-	std::cout << "===================" << std::endl;
 }
 

@@ -4,6 +4,7 @@
 #include "Parameters.h"
 #include "iSolver.h"
 #include "error_handling.h"
+#include "io_auxiliary.h"
 #include <vector>
 
 class Lagrange_1D: public iSolver {
