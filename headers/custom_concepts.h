@@ -49,7 +49,7 @@ namespace custom_concepts
 			}(std::make_index_sequence<std::tuple_size_v<T>>());
 }
 
-struct string_hash {
+struct string_hash { // to allow heterogenious search for unordered containers
   using is_transparent = void;
   [[nodiscard]] size_t operator()(const char *txt) const {
     return std::hash<std::string_view>{}(txt);

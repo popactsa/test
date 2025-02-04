@@ -97,7 +97,7 @@ void Parameters::assign_read_value(const std::string& value, std::string_view ke
 	initialized_variables.insert(ptr);
 }
 
-void Parameters::assign_read_wall_value(const std::string &value, std::string_view key, std::unordered_map<std::string, std::pair<std::string, void*>, string_hash, std::equal_to<>> w_table, const int n)
+void Parameters::assign_read_wall_value(const std::string &value, std::string_view key, const std::unordered_map<std::string, std::pair<std::string, void*>, string_hash, std::equal_to<>>& w_table, const int n)
 {
 	// std::stoi, stod requires for std::string, so passing value as std::string_view is meaningless i think
 	auto found = w_table.find(key);
@@ -206,6 +206,7 @@ bool Parameters::are_all_non_walls_variables_initialized() const noexcept
 
 Parameters::Parameters(std::ifstream fin)
 {
+	const auto init_start_tick_time = std::chrono::system_clock::now();
 	if (!fin.is_open()) std::cout << "failed to open" << std::endl;
 	else
 	{
@@ -270,6 +271,9 @@ Parameters::Parameters(std::ifstream fin)
 		dx = (x_end - x_start) / nx;
 		fin.close();
 	}	
+	using t_format = std::chrono::milliseconds;
+	std::cout << "Reading from file : done!" << std::endl;
+	std::cout << "Processing time : " << count_time_between_const<t_format>(init_start_tick_time, std::chrono::system_clock::now()) << " ms" << std::endl << std::endl;
 	std::cout << "===================" << std::endl;
 }
 

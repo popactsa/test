@@ -79,7 +79,7 @@ class Parameters
 		wall::w_type interp_wall_type(std::string_view str) const;
 	
 		void assign_read_value(const std::string&, std::string_view);
-		void assign_read_wall_value(const std::string&, std::string_view, std::unordered_map<std::string, std::pair<std::string, void*>, string_hash, std::equal_to<>>, const int);
+		void assign_read_wall_value(const std::string&, std::string_view, const std::unordered_map<std::string, std::pair<std::string, void*>, string_hash, std::equal_to<>>&, const int);
 		std::string set_wall_properties(std::ifstream&, const int);
 
 	private:
