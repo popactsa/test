@@ -29,6 +29,7 @@ using ums_w_hs = std::unordered_map<key, value, string_hash, std::equal_to<>>;
 class Parameters
 {
 	public:
+		// General variables
 		int nx_all; // calculated implicitly
 		double dx;
 
@@ -58,6 +59,10 @@ class Parameters
 			test4
 		} ic;
 
+		int nt_write;
+		std::string write_file;
+
+		// Wall-related variables
 		struct wall
 		{
 			enum class w_type
@@ -71,8 +76,6 @@ class Parameters
 		
 		static constexpr int number_of_walls = 2;
 		std::array<wall, number_of_walls> walls;
-		int nt_write;
-		std::string write_file;
 
 		Parameters(){};
 		Parameters(std::ifstream);
@@ -109,8 +112,8 @@ class Parameters
 		};
 
 		bool does_initialized_values_contain_all_w_vars(const int, const ums_w_hs<std::string, std::pair<std::string, void*>>&) const noexcept;
-		bool are_all_non_walls_variables_initialized() const noexcept;	
-		bool are_all_walls_initialized(const std::vector<int>&) const noexcept;
+		bool are_all_general_variables_initialized() const noexcept;	
+		bool are_all_wall_variables_initialized(const std::vector<int>&) const noexcept;
 };
 
 

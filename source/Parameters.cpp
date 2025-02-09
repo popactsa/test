@@ -160,19 +160,19 @@ std::string Parameters::set_wall_properties(std::ifstream& fin, const int n)
 		{
 			expect<Error_action::terminating, custom_exceptions::parameters_exception>(
 				[this, n, &w_table]() {return does_initialized_values_contain_all_w_vars(n, w_table); }, 
-				"Some variables are not initialized"
+				"Some wall-related variables are not initialized"
 			);
 			return read; // this string contains information about non-wall variables
 		}
 	}
 	expect<Error_action::terminating, custom_exceptions::parameters_exception>(
 		[this, n, &w_table]() {return does_initialized_values_contain_all_w_vars(n, w_table); }, 
-		"Some variables are not initialized"
+		"Some wall-related variables are not initialized"
 	);
 	return std::string("-end-");
 }
 
-bool Parameters::are_all_walls_initialized(const std::vector<int>& initialized) const noexcept
+bool Parameters::are_all_wall_variables_initialized(const std::vector<int>& initialized) const noexcept
 {
 	bool result = true;
 	for (int i = 0; i < number_of_walls; ++i)
@@ -188,7 +188,7 @@ bool Parameters::are_all_walls_initialized(const std::vector<int>& initialized) 
 	return result;
 }
 
-bool Parameters::are_all_non_walls_variables_initialized() const noexcept
+bool Parameters::are_all_general_variables_initialized() const noexcept
 {
 	bool result = true;
 	for (auto it : var_table) // non-walls variables
@@ -266,12 +266,12 @@ Parameters::Parameters(std::ifstream fin)
 			}
 		}
 		expect<Error_action::terminating, custom_exceptions::parameters_exception>(
-			[this]() {return are_all_non_walls_variables_initialized(); }, 
-			"Some variables are not initialized"
+			[this]() {return are_all_general_variables_initialized(); }, 
+			"Some general variables are not initialized"
 		);
 		expect<Error_action::terminating, custom_exceptions::parameters_exception>(
-			[this, &initialized_walls]() {return are_all_walls_initialized(initialized_walls); }, 
-			"Some variables are not initialized"
+			[this, &initialized_walls]() {return are_all_wall_variables_initialized(initialized_walls); }, 
+			"Some wall-related variables are not initialized"
 		);
 		nx_all = nx;
 		for (auto it : walls)
@@ -280,4 +280,3 @@ Parameters::Parameters(std::ifstream fin)
 		fin.close();
 	}	
 }
-
