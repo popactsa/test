@@ -18,6 +18,8 @@ headers/~/*
 
 ~/.vim/*
 
+build/*
+
 *.png
 
 readme.md

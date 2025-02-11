@@ -1,5 +1,5 @@
-#ifndef PARAMETERS_H
-#define PARAMETERS_H
+#ifndef ELASTICITY_LAGRANGE_1D_PARAMETERS_H
+#define ELASTICITY_LAGRANGE_1D_PARAMETERS_H
 
 #include <iostream>
 #include <memory>
@@ -26,7 +26,7 @@
 template<typename key, typename value>
 using ums_w_hs = std::unordered_map<key, value, string_hash, std::equal_to<>>;
 
-class Parameters
+class elasticity_Lagrange_1D_Parameters
 {
 	public:
 		// General variables
@@ -37,18 +37,12 @@ class Parameters
 		int nx;
 		double CFL;
 		int nt;
-
-		double gamma;
-		double mu0 = 2;
-		bool is_conservative;
+		double u0, mu, rho_0, Y_0, K; // material properties
 
 		enum class viscosity
 		{
 			none,
-			Neuman,
-			Latter,
-			linear,
-			sum
+			artificial
 		} visc;
 
 		enum class ic_preset
@@ -59,6 +53,7 @@ class Parameters
 			test4
 		} ic;
 
+		double mu0 = 2.0;
 		int nt_write;
 		std::string write_file;
 
@@ -71,14 +66,13 @@ class Parameters
 				flux
 			} type;
 			int n_fict = 1; // set implicitly depending on type(will make it later, depending on solver)
-			double P, v;
 		};
 		
 		static constexpr int number_of_walls = 2;
 		std::array<wall, number_of_walls> walls;
 
-		Parameters(){};
-		Parameters(std::ifstream);
+		elasticity_Lagrange_1D_Parameters(){};
+		elasticity_Lagrange_1D_Parameters(std::ifstream);
 	
 	protected:
 		viscosity interp_viscosity(std::string_view str) const;
@@ -96,14 +90,17 @@ class Parameters
 			{"x_end", {"double", &x_end}},
 			{"nx", {"int", &nx}},
 			{"CFL", {"double", &CFL}},
+			{"u0", {"double", &u0}},
+			{"mu", {"double", &mu}},
+			{"mu0", {"double", &mu0}},
+			{"rho_0", {"double", &rho_0}},
+			{"Y_0", {"double", &Y_0}},
+			{"K", {"double", &K}},
 			{"nt", {"int", &nt}},
 			{"nt_write", {"int", &nt_write}},
 			{"write_file", {"string", &write_file}},
-			{"gamma", {"double", &gamma}},
-			{"mu0", {"double", &mu0}},
 			{"viscosity", {"viscosity", &visc}},
 			{"initial_conditions", {"ic_preset", &ic}},
-			{"is_conservative", {"bool", &is_conservative}}
 		};
 
 		std::set<void*> initialized_variables
