@@ -63,6 +63,7 @@ int print_filenames(const std::filesystem::path &dir, std::string_view postfix) 
 {
 	int cnt{0};
 
+#ifdef __cpp_lib_format
 	std::string fmt = "      {:>2} : "; // supposing you have lower than 100 solvers..
 	const int init_size = 11; // depending on fmt
 	using namespace std::literals::string_literals;
@@ -73,6 +74,7 @@ int print_filenames(const std::filesystem::path &dir, std::string_view postfix) 
 			{".>"s, w.ws_col - init_size - max_file_name_size - max_solver_name_size}}
 			);
 
+#endif
 	for (auto const& dir_entry : std::filesystem::directory_iterator{dir, std::filesystem::directory_options::skip_permission_denied})
 	{
 		auto file_perms = std::filesystem::status(dir_entry).permissions();
@@ -81,6 +83,7 @@ int print_filenames(const std::filesystem::path &dir, std::string_view postfix) 
 		{
 			++cnt;
 			std::ifstream fin(dir_entry.path());
+#ifdef __cpp_lib_format
 			std::string solver_type = "unknown";
 			if (fin.is_open())
 			{
@@ -99,6 +102,9 @@ int print_filenames(const std::filesystem::path &dir, std::string_view postfix) 
 			std::string rp_str{static_cast<std::string>(std::filesystem::relative(dir_entry.path(), dir))};
 			std::string time_str{time_to_string(dir_entry.last_write_time())};
 			std::cout << std::vformat(fmt, std::make_format_args(cnt, rp_str, solver_type, time_str)) << std::endl;
+#else
+			std::cout << cnt << " : " << dir_entry.path().string() << std::endl;
+#endif
 		}
 	}
 	return cnt;

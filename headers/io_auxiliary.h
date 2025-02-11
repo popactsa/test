@@ -4,7 +4,6 @@
 #include <iostream>
 #include <string>
 #include <filesystem>
-#include <format>
 #include <fstream>
 #include <chrono>
 #include <ctime>
@@ -17,6 +16,11 @@
 #include <unordered_map>
 #include <concepts>
 
+#if __has_include(<format>)
+	#include <format> // cluster4 doesn't provide it
+#endif
+
+
 #include "custom_concepts.h"
 #include "error_handling.h"
 
@@ -27,7 +31,7 @@ extern const std::chrono::time_point<std::chrono::system_clock> start_tick_time;
 namespace io_constants
 {
 	 inline constexpr int asc_time_len = 25;
-	 inline constexpr int max_file_name_size = 25;
+	 inline constexpr int max_file_name_size = 35;
 	 inline constexpr int max_solver_name_size = 15;
 }
 
@@ -122,6 +126,7 @@ int choose_in_range(const int, const int);
 
 bool check_rmod(const std::filesystem::path&) noexcept;
 
+#ifdef __cpp_lib_format
 inline void fmt_add_align(std::string& fmt, const std::string& align, const std::vector<int>& sizes) noexcept
 {
 	for (auto it : sizes)
@@ -137,5 +142,8 @@ inline void fmt_add_align(std::string& fmt, const std::vector<std::pair<std::str
 {
 	for (auto [align, size] : align_n_sizes) fmt_add_align(fmt, align, {size});
 }
+
+std::string get_format_by_left_side_impl(std::initializer_list<std::string_view> args) noexcept; // deprecate?
+#endif
 
 #endif
