@@ -7,6 +7,7 @@
 #include <fstream>
 #include <chrono>
 #include <ctime>
+#include <vector>
 #include <sys/ioctl.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -90,8 +91,8 @@ inline std::filesystem::path get_path_to_file_in_dir(const std::filesystem::path
 int print_filenames(const std::filesystem::path&, std::string_view) noexcept;
 
 template<typename C>
-	requires custom_concepts::Container<C> && std::same_as<typename C::value_type, std::string>
-void split_string(std::string_view init, C& result, const char sep) // if get rid of expect-assertions, function can be declared constexpr
+	requires custom_concepts::Container<C> && (!std::assignable_from<typename C::value_type, std::string_view>)
+constexpr void split_string(std::string_view init, C& result, const char sep) // if get rid of expect-assertions, function can be declared constexpr
 {
 	auto it = result.begin();
 	std::size_t prev{0};
@@ -111,10 +112,33 @@ void split_string(std::string_view init, C& result, const char sep) // if get ri
 }
 
 template<typename C>
-	requires custom_concepts::Container<C> && std::same_as<typename C::value_type, std::string>
-inline void split_string(std::string_view init, C& result)
+	requires custom_concepts::Container<C> && (!std::assignable_from<typename C::value_type, std::string_view>)
+constexpr void split_string(std::string_view init, C& result) // if get rid of expect-assertions, function can be declared constexpr
 {
 	split_string(init, result, ' ');
+}
+
+template<typename type>
+	requires (!std::assignable_from<type, std::string_view>)
+void split_string_to_v(std::string_view init, std::vector<type>& result, const char sep) // if get rid of expect-assertions, function can be declared constexpr
+{
+	expect<Error_action::logging, std::length_error>(
+		[&](){return init.size() > 0; }, 
+		std::to_string(init.size()).c_str()
+	);
+	std::size_t prev{0};
+	for (std::size_t current(init.find(sep, prev)); current != init.npos; prev = current + 1, current = init.find(sep, prev))
+	{
+		result.push_back(static_cast<std::string>(init.substr(prev, current - prev)));
+	}
+	result.push_back(static_cast<std::string>(init.substr(prev)));
+}
+
+template<typename type>
+	requires (!std::assignable_from<type, std::string_view>)
+void split_string_to_v(std::string_view init, std::vector<type>& result) // if get rid of expect-assertions, function can be declared constexpr
+{
+	split_string_to_v(init, result, ' ');
 }
 
 inline int print_filenames(const std::filesystem::path& dir) noexcept

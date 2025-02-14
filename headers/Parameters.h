@@ -6,6 +6,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <cstring>
 #include <unordered_map>
 #include <iomanip>
 #include <exception>
@@ -13,6 +14,8 @@
 #include <utility>
 #include <set>
 #include <algorithm>
+
+#include <charconv>
 
 #include <concepts>
 #include <iterator>
@@ -85,8 +88,8 @@ class Parameters
 		ic_preset interp_ic_preset(std::string_view str) const;
 		wall::w_type interp_wall_type(std::string_view str) const;
 	
-		void assign_read_value(const std::string&, std::string_view);
-		void assign_read_wall_value(const std::string&, std::string_view, const ums_w_hs<std::string, std::pair<std::string, void*>>&, const int);
+		void assign_read_value(std::string_view, std::string_view);
+		void assign_read_wall_value(std::string_view, std::string_view, const ums_w_hs<std::string, std::pair<std::string, void*>>&, const int);
 		std::string set_wall_properties(std::ifstream&, const int);
 
 	private:

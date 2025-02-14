@@ -10,6 +10,7 @@ std::string time_to_string(const std::filesystem::file_time_type& ftime) noexcep
 	return str;
 }
 
+
 bool check_rmod(const std::filesystem::path& p) noexcept
 {
 	namespace fs = std::filesystem;

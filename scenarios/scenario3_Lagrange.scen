@@ -16,7 +16,7 @@ write_file samplesample.csv
 gamma 1.4
 viscosity Neuman
 initial_conditions test1
-is_conservative 1
+is_conservative true
 wall 1
 	P 1
 	v 1

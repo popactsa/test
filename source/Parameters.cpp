@@ -1,5 +1,6 @@
 #include "Parameters.h"
 #include <iterator>
+#include <string_view>
 
 Parameters::viscosity Parameters::interp_viscosity(std::string_view str) const
 {
@@ -72,43 +73,61 @@ Parameters::ic_preset Parameters::interp_ic_preset(std::string_view str) const
 	}
 }
 
-void Parameters::assign_read_value(const std::string& value, std::string_view key)
+void Parameters::assign_read_value(std::string_view value, std::string_view key)
 {
 	// std::stoi, stod requires for std::string, so passing value as std::string_view is meaningless i think
 	auto found = var_table.find(key);
 	std::string_view type(found->second.first);
 	void* ptr{found->second.second};
 	if (!type.compare("double"))
-		*(static_cast<double*>(ptr)) = std::stod(value);
+	{
+		double result;
+		std::from_chars(value.data(), value.data() + value.size(), result);
+		*(static_cast<double*>(ptr)) = result;
+	}
 	else if (!type.compare("int"))
-		*(static_cast<int*>(ptr)) = std::stoi(value);
+	{
+		int result;
+		std::from_chars(value.data(), value.data() + value.size(), result);
+		*(static_cast<int*>(ptr)) = result;
+	}
 	else if (!type.compare("bool"))
-		*(static_cast<bool*>(ptr)) = static_cast<bool>(std::stoi(value));
+	{
+		if (!strcmp(value.data(), "false"))
+			*(static_cast<bool*>(ptr)) = false;
+		else if (!strcmp(value.data(), "true"))
+			*(static_cast<bool*>(ptr)) = true;
+		else
+			throw std::invalid_argument("Incorrect bool value");
+	}
 	else if (!type.compare("string"))
-		*(static_cast<std::string*>(ptr)) = value;
+		*(static_cast<std::string*>(ptr)) = value; // implicit
 	else if (!type.compare("ic_preset"))
 		*(static_cast<ic_preset*>(ptr)) = interp_ic_preset(value);
 	else if (!type.compare("viscosity"))
 		*(static_cast<viscosity*>(ptr)) = interp_viscosity(value);
 	expect<Error_action::logging, custom_exceptions::multiple_read_definitions>(
-		[ptr, key, this]() {return !initialized_variables.contains(ptr); }, 
+		[ptr, this]() {return !initialized_variables.contains(ptr); }, 
 		static_cast<std::string>("Variable ") + found->first + static_cast<std::string>(" is already defined")
 	); //maybe that's too expensive to have that must static_cast's
 	initialized_variables.insert(ptr);
 }
 
-void Parameters::assign_read_wall_value(const std::string &value, std::string_view key, const ums_w_hs<std::string, std::pair<std::string, void*>>& w_table, const int n)
+void Parameters::assign_read_wall_value(std::string_view value, std::string_view key, const ums_w_hs<std::string, std::pair<std::string, void*>>& w_table, const int n)
 {
-	// std::stoi, stod requires for std::string, so passing value as std::string_view is meaningless i think
 	auto found = w_table.find(key);
 	std::string_view type(found->second.first);
 	void* ptr{found->second.second};
 	if (!type.compare("double"))
-		*(static_cast<double*>(ptr)) = std::stod(value);
+	{
+		double result;
+		std::from_chars(value.data(), value.data() + value.size(), result);
+		*(static_cast<double*>(ptr)) = result;
+	}
 	else if (!type.compare("w_type"))
 		*(static_cast<wall::w_type*>(ptr)) = interp_wall_type(value);
 	expect<Error_action::logging, custom_exceptions::multiple_read_definitions>(
-		[ptr, key, this]() {return !initialized_variables.contains(ptr); }, 
+		[ptr, this]() {return !initialized_variables.contains(ptr); }, 
 		static_cast<std::string>("Variable ") + found->first + static_cast<std::string>(" <- wall ") + std::to_string(n) + static_cast<std::string>(" is already defined")
 	); //maybe that's too expensive to have that must static_cast's
 	initialized_variables.insert(ptr);
@@ -144,17 +163,16 @@ std::string Parameters::set_wall_properties(std::ifstream& fin, const int n)
 		{
 			if (read[1] == '#') continue;
 			const int number_of_properties = 2;
-			std::array<std::string, number_of_properties> var_read_properties{}; // name value
+			std::array<std::string_view, number_of_properties> var_read_properties{}; // name value
 			split_string(read, var_read_properties);
-			var_read_properties[0].erase(0, 1); // pop aligning character
+			var_read_properties[0].remove_prefix(1); // pop aligning character
 
 			auto found_name = w_table.find(var_read_properties[0]);
 			expect<Error_action::throwing, std::invalid_argument>(
 				[&]() {return found_name != w_table.end(); }, 
 				"Can't find read variable name in w_table"
 			);
-			std::string value = var_read_properties[1];
-			assign_read_wall_value(value, found_name->first, w_table, n);
+			assign_read_wall_value(var_read_properties[1], found_name->first, w_table, n);
 		}
 		else
 		{
@@ -230,19 +248,32 @@ Parameters::Parameters(std::ifstream fin)
 				is_solver_name_read = true;
 				continue;
 			}
-			std::array<std::string, number_of_properties> var_read_properties{}; // name value
+			std::array<std::string_view, number_of_properties> var_read_properties{}; // name value
+			std::vector<std::string> vect{}; // name value
 			try
 			{
 				for (bool is_a_wall = true; is_a_wall;)
 				{
 					split_string(read, var_read_properties);
+					split_string_to_v(read, vect);
+					std::cout << vect[0] << " " << vect[1] << std::endl;
 					if (var_read_properties[0] == "wall") 
 					{
+						int wall_number;
+						auto vrp = &var_read_properties[1];
+						auto [ptr, ec] = std::from_chars(vrp->data(), vrp->data() + vrp->size(), wall_number);
 						expect<Error_action::throwing, std::invalid_argument>( // std::invalid_argument just to have it worked out equally to std::stoi errors and others
-							[&var_read_properties]() {return std::stoi(var_read_properties[1]) <= number_of_walls; }, 
+							[ec]() {
+								return ec == std::errc();
+							},
+							"Incorrect number value passed"
+						);
+						expect<Error_action::throwing, std::invalid_argument>( // std::invalid_argument just to have it worked out equally to std::stoi errors and others
+							[wall_number]() {
+								return wall_number < number_of_walls;
+							},
 							"Wall number doesn't fit in range"
 						);
-						int wall_number = std::stoi(var_read_properties[1]);
 						read = set_wall_properties(fin, wall_number);
 						initialized_walls.push_back(wall_number);
 						if (read == std::string("-end-")) break; // "-end-" is returned when wall is initialized last in file
@@ -255,8 +286,7 @@ Parameters::Parameters(std::ifstream fin)
 					[found_name, this]() {return found_name != var_table.end(); }, 
 					"Can't find read variable name in var_table"
 				);
-				std::string value = var_read_properties[1];
-				assign_read_value(value, found_name->first);
+				assign_read_value(var_read_properties[1], found_name->first);
 			}
 			catch (const std::exception& err)
 			{
