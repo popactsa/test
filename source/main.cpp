@@ -16,7 +16,7 @@ int main()
 {
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 	namespace fs = std::filesystem;
-	const fs::path scenario_dir{"scenarios"};
+	const fs::path scenario_dir{"../scenarios"};
 	std::string_view postfix = ".scen";
 	if (check_rmod(scenario_dir))
 	{
@@ -30,7 +30,7 @@ int main()
 		Lagrange_1D task(pars);
 		if (task.start())
 		{
-			std::string post_start(static_cast<std::string>("python source/post.py ") + std::to_string(pars.nt / pars.nt_write - 1));
+			std::string post_start(static_cast<std::string>("python ../source/post.py ") + std::to_string(pars.nt / pars.nt_write - 1));
 			system(post_start.c_str());
 #ifdef WIN32
 #else

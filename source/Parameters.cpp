@@ -150,7 +150,7 @@ std::string Parameters::set_wall_properties(std::ifstream& fin, const int n)
 
 			auto found_name = w_table.find(var_read_properties[0]);
 			expect<Error_action::throwing, std::invalid_argument>(
-				[&, this]() {return found_name != w_table.end(); }, 
+				[&]() {return found_name != w_table.end(); }, 
 				"Can't find read variable name in w_table"
 			);
 			std::string value = var_read_properties[1];
@@ -239,7 +239,7 @@ Parameters::Parameters(std::ifstream fin)
 					if (var_read_properties[0] == "wall") 
 					{
 						expect<Error_action::throwing, std::invalid_argument>( // std::invalid_argument just to have it worked out equally to std::stoi errors and others
-							[&var_read_properties, this]() {return std::stoi(var_read_properties[1]) <= number_of_walls; }, 
+							[&var_read_properties]() {return std::stoi(var_read_properties[1]) <= number_of_walls; }, 
 							"Wall number doesn't fit in range"
 						);
 						int wall_number = std::stoi(var_read_properties[1]);

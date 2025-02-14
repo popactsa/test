@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import sys
 
 step = int(sys.argv[1])
-file_name = "data/" + str(step) + ".csv"
+file_name = "../data/" + str(step) + ".csv"
 # file_sol = "data/exact_solution.csv"
 data = pd.read_csv(file_name, sep = ' ', header=None)
 # data1 = pd.read_csv(file_sol, sep = ' ', header=None)
