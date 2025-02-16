@@ -7,7 +7,7 @@ elasticity_Lagrange_1D_Parameters::viscosity elasticity_Lagrange_1D_Parameters::
 	std::unordered_map<std::string_view, viscosity> tbl
 	{
 		{"none", none},
-		{"artificial", artificial},
+		{"PIC", PIC},
 	};
 	auto found = tbl.find(str);
 	if (found != tbl.end()) return found->second;
@@ -29,7 +29,8 @@ elasticity_Lagrange_1D_Parameters::wall::w_type elasticity_Lagrange_1D_Parameter
 	std::unordered_map<std::string_view, wall::w_type> tbl
 	{
 		{"noslip", noslip},
-		{"flux", flux}
+		{"flux", flux},
+		{"piston", piston}
 	};
 	auto found = tbl.find(str);
 	if (found != tbl.end()) return found->second;
@@ -51,9 +52,6 @@ elasticity_Lagrange_1D_Parameters::ic_preset elasticity_Lagrange_1D_Parameters::
 	std::unordered_map<std::string_view, ic_preset> tbl
 	{
 		{"test1", test1},
-		{"test2", test2},
-		{"test3", test3},
-		{"test4", test4}
 	};
 	auto found = tbl.find(str);
 	if (found != tbl.end()) return found->second;

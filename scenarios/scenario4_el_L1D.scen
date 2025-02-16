@@ -4,19 +4,23 @@
 elasticity Lagrange 1D
 x_start 0.0
 x_end 1.0
-nx 100
+nx 101
 wall 0
 	P 1
 	v 1
 	type noslip
 CFL 0.5
 nt 100
+v_0 15.0
+mu 79.3e9
+rho_0 7850.0
+Y_0 0.3e9
+K 156e9
 nt_write 1
 write_file samplesample.csv
-gamma 1.4
-viscosity Neuman
+viscosity PIC
 initial_conditions test1
-is_conservative 1
+mu_0 50.0
 wall 1
 	P 1
 	v 1

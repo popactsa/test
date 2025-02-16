@@ -35,7 +35,7 @@ bool elasticity_Lagrange_1D::start()
 			t += dt;
 			if (step % par.nt_write == 0)	write_data();
 		}
-		std::cout << "Lagrange 1D calculations : done!" << std::endl;
+		std::cout << "Elasticity Lagrange 1D calculations : done!" << std::endl;
 		std::cout << "Processing time : " << count_time_between<t_format>(prev_tick_time, std::chrono::system_clock::now()) << " ms" << std::endl;
 		std::cout << "=================" << std::endl;
 		return true;	
@@ -62,9 +62,9 @@ void elasticity_Lagrange_1D::check_parameters()
 		expect<Error_action::throwing, exc>([this]{return par.nt > 0; }, "par.nt > 0");
 		expect<Error_action::throwing, exc>([this]{return par.nt_write > 0; }, "par.nt_write > 0");
 		expect<Error_action::throwing, exc>([this]{return par.CFL > 0.0; }, "par.CFL > 0");
-		expect<Error_action::throwing, exc>([this]{return par.mu0 > 0; }, "par.mu0 > 0");
+		expect<Error_action::throwing, exc>([this]{return par.mu_0 > 0; }, "par.mu0 > 0");
 
-		expect<Error_action::throwing, exc>([this]{return par.u0 > 0; }, "par.u0 > 0");
+		expect<Error_action::throwing, exc>([this]{return par.v_0 > 0; }, "par.u0 > 0");
 		expect<Error_action::throwing, exc>([this]{return par.mu > 0; }, "par.mu > 0");
 		expect<Error_action::throwing, exc>([this]{return par.rho_0 > 0; }, "par.rho_0 > 0");
 		expect<Error_action::throwing, exc>([this]{return par.Y_0 > 0; }, "par.Y_0 > 0");
@@ -87,67 +87,16 @@ void elasticity_Lagrange_1D::set_initial_conditions()
 	for (int i = 0; i < par.nx_all + 1; ++i)
 	{
 		x[i] = par.x_start - (par.walls[0].n_fict - i) * par.dx;	
-		switch(par.ic)
-		{
-			case test2:
-				v[i] = (i * par.dx <= middle_plain) 
-					? -2.0 
-					: 2.0;
-				break;
-			case test1:
-			case test3:
-			case test4:
-				v[i] = 0.0;
-				break;
-		}
+		v[i] = 0.0;
 	}
 	for (int i = 0; i < par.nx_all; ++i)
 	{
-		switch(par.ic)
-		{
-			case test1:
-				if (i * par.dx <= middle_plain)
-				{
-					P[i] = 1.0;
-					rho[i] = 1.0;
-				}
-				else
-				{
-					P[i] = 0.1;
-					rho[i] = 0.125;
-				}
-				break;
-			case test2:
-				P[i] = 0.4;
-				rho[i] = 1.0;
-				break;
-			case test3:
-				if (i * par.dx <= middle_plain)
-				{
-					P[i] = 1000.0;
-					rho[i] = 1.0;
-				}
-				else
-				{
-					P[i] = 0.01;
-					rho[i] = 1.0;
-				}
-				break;
-			case test4:
-				if (i * par.dx <= middle_plain)
-				{
-					P[i] = 0.01;
-					rho[i] = 1.0;
-				}
-				else
-				{
-					P[i] = 100.0;
-					rho[i] = 1.0;
-				}
-				break;
-		}
-	  	U[i] = P[i] / (par.gamma - 1.0) / rho[i];
+		P[i] = 0.0;
+		rho[i] = par.rho_0;
+		U[i] = 0.0;
 		m[i] = rho[i] * (x[i + 1] - x[i]);
+		P_hydr[i] = 0.0;
+		S[i] = 0.0;
 	}
 }
 
@@ -156,17 +105,29 @@ void elasticity_Lagrange_1D::apply_boundary_conditions()
 	using enum elasticity_Lagrange_1D_Parameters::wall::w_type;
 	for (int i = 0; i < par.number_of_walls; ++i)
 	{
-		int fict = (i == 1) ? par.nx_all : 0; // right/left wall cases
+		int edge = (i == 1) ? par.nx_all : 0; // right/left wall cases
+		
+		int first_shift = (i == 1) ? -par.walls[i].n_fict : par.walls[i].n_fict;
+		int second_shift = (i == 1) ? first_shift - 1 : first_shift + 1;
+		
 		switch(par.walls[i].type)
 		{
 			case noslip:
-				v[fict] = i == 1 ? -v[par.nx_all - 1] : -v[1];
+				v[edge + first_shift] = 0.0;
+				v[edge] = -v[edge + second_shift] + 2 * v[edge + first_shift];
 				break;
 			case flux:
-				v[fict] = i == 1 ? v[par.nx_all - 1] : v[1];
-			break;
-			rho[fict] = i == 1 ? rho[par.nx_all - 1] : rho[1]; // both cases
-			U[fict] = i == 1 ? rho[par.nx_all - 1] : rho[1];
+				v[edge + first_shift] = v[edge + second_shift];
+				v[edge] = v[edge + second_shift];
+				break;
+			case piston:
+				v[edge + first_shift] = par.v_0;
+				v[edge] = par.v_0;
+				break;
+			
+			rho[edge] = rho[edge + first_shift]; // both cases
+			U[edge] = U[edge + first_shift];
+			S[edge] = S[edge + first_shift];
 		}
 	}
 }
@@ -178,7 +139,7 @@ void elasticity_Lagrange_1D::get_time_step()
 	{
 		double dx = x[i + 1] - x[i];
 		double V = 0.5 * (v[i + 1] + v[i]);
-		double c = std::sqrt(par.gamma * P[i] / rho[i]);
+		double c = std::sqrt(par.K / par.rho_0) / rho[i];
 		double dt_temp = par.CFL * dx / (c + fabs(V));
 		if (dt_temp < min_dt) min_dt = dt_temp;
 	}
@@ -191,7 +152,10 @@ void elasticity_Lagrange_1D::solve_step()
 	get_time_step();
 
 	double v_last[par.nx_all + 1];
+	double rho_last[par.nx_all];
+	
 	for (int i = 0; i < par.nx_all + 1; ++i) v_last[i] = v[i]; // Last solved layer of v
+	for (int i = 0; i < par.nx_all; ++i) rho_last[i] = par.rho_0; // Last solved layer of rho
 
 	for (int i = 0; i < par.nx_all; ++i) // Artificial viscosity blurs head of a shock wave
 	{
@@ -199,8 +163,10 @@ void elasticity_Lagrange_1D::solve_step()
 		switch(par.visc)
 		{
 			case none:
-			case artificial:
-				omega[i] = 0.0;
+			case PIC:
+				omega[i] = (v[i] - v[i+1] > 0.0) ?
+					0.5 * par.mu_0 * rho[i] * (v[i] + v[i+1]) * (v[i] - v[i+1]) : 
+					0.0;
 				break;
 		}
 	}
@@ -212,27 +178,33 @@ void elasticity_Lagrange_1D::solve_step()
 	// recalculating x
 	for (int i = 0; i < par.nx_all + 1; ++i) x[i] += v[i] * dt;
 
-	// calculating P at boundaries of cells
-	double Pb[par.nx_all];
-	for (int i = 1; i < par.nx_all; ++i) Pb[i] = 0.5 * (P[i] + omega[i] + P[i-1] + omega[i-1]);
-
 	for (int i = par.walls[0].n_fict; i < par.nx_all - par.walls[1].n_fict; ++i)
 	{
 		// calculating rho
-		rho[i] = rho[i] / (rho[i] * (v[i + 1] - v[i]) * dt / m[i] + 1.0);
+		rho[i] = m[i] / (x[i+1] - x[i]);
 		// calculating U
-		if (par.is_conservative) 
-		{
-			double U_temp = U[i];
-			U[i] = U[i] - (v[i + 1] * Pb[i + 1] - v[i] * Pb[i]) * dt / m[i] 
-				+ (v_last[i + 1] + v_last[i]) * (v_last[i + 1] + v_last[i]) / 8.0 
-				- (v[i + 1] + v[i]) * (v[i + 1] + v[i]) / 8.0;
-			// Return to unconservative scheme on this step
-			if (U[i] < 0.0) U[i] = U_temp / (rho[i] * (v[i + 1] - v[i]) * (par.gamma - 1.0) * dt / m[i] + 1.0);
-		}
-		else U[i] = U[i] / (rho[i] * (v[i + 1] - v[i]) * (par.gamma - 1.0) * dt / m[i] + 1.0);
+		U[i] = U[i] + dt / m[i] 
+			* ( v[i] * ( (m[i] * P[i-1] + m[i-1] * P[i]) / (m[i-1] + m[i]) + 0.5 * (omega[i] + omega[i-1])) 
+			-  v[i+1] * ( (m[i+1] * P[i] + m[i] * P[i+1]) / (m[i] + m[i+1]) + 0.5 * (omega[i+1] + omega[i])) ) 
+			+ (v_last[i + 1] + v_last[i]) * (v_last[i + 1] + v_last[i]) / 8.0 
+			- (v[i + 1] + v[i]) * (v[i + 1] + v[i]) / 8.0;
+		// calculating deviator
+		S[i] = S[i] + 2 * par.mu * ( -dt * (v[i+1] - v[i]) / (x[i+1] - x[i]) 
+							  + 2.0 / 3.0 * (1.0 / rho[i] - 1.0 / rho_last[i]) / (1.0 / rho[i] + 1.0 / rho_last[i]) );
+
 	}
-	for (int i = 0; i < par.nx_all; ++i) P[i] = rho[i] * (par.gamma - 1.0) * U[i];	
+	// calculating pressure
+	for (int i = 0; i < par.nx_all; ++i)
+	{
+		P_hydr[i] = par.K * (1.0 - par.rho_0 / rho[i]);
+		int sign = (S[i] > 0) ? 1 : -1;
+		P[i] = (fabs(S[i]) < 2.0 / 3.0 * par.Y_0) ? 
+			S[i] : 
+			2.0 / 3.0 * par.Y_0 * sign;
+		P[i] = P[i] + P_hydr[i];
+	}
+	
+	
 }
 
 void elasticity_Lagrange_1D::write_data()

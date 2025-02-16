@@ -37,23 +37,20 @@ class elasticity_Lagrange_1D_Parameters
 		int nx;
 		double CFL;
 		int nt;
-		double u0, mu, rho_0, Y_0, K; // material properties
+		double v_0, mu, rho_0, Y_0, K; // material properties
 
 		enum class viscosity
 		{
 			none,
-			artificial
+			PIC,
 		} visc;
 
 		enum class ic_preset
 		{
 			test1,
-			test2,
-			test3,
-			test4
 		} ic;
 
-		double mu0 = 2.0;
+		double mu_0 = 50.0;
 		int nt_write;
 		std::string write_file;
 
@@ -63,7 +60,8 @@ class elasticity_Lagrange_1D_Parameters
 			enum class w_type
 			{
 				noslip,
-				flux
+				flux,
+				piston
 			} type;
 			int n_fict = 1; // set implicitly depending on type(will make it later, depending on solver)
 		};
@@ -90,9 +88,9 @@ class elasticity_Lagrange_1D_Parameters
 			{"x_end", {"double", &x_end}},
 			{"nx", {"int", &nx}},
 			{"CFL", {"double", &CFL}},
-			{"u0", {"double", &u0}},
+			{"v_0", {"double", &v_0}},
 			{"mu", {"double", &mu}},
-			{"mu0", {"double", &mu0}},
+			{"mu_0", {"double", &mu_0}},
 			{"rho_0", {"double", &rho_0}},
 			{"Y_0", {"double", &Y_0}},
 			{"K", {"double", &K}},
@@ -105,7 +103,7 @@ class elasticity_Lagrange_1D_Parameters
 
 		std::set<void*> initialized_variables
 		{
-			&mu0 // adding default-initialized variables
+			&mu_0 // adding default-initialized variables
 		};
 
 		bool does_initialized_values_contain_all_w_vars(const int, const ums_w_hs<std::string, std::pair<std::string, void*>>&) const noexcept;
